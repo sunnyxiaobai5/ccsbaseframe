@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Func">
+
+	<typeAlias alias="Func" type="cn.ccsgroup.ccsframework.entity.Func"/>
+	<parameterMap class="cn.ccsgroup.ccsframework.entity.Func" id="funcMap">
+		<parameter property="status"/>
+		<parameter property="id"/>
+	</parameterMap>
+	
+	<!-- 查询条件定义 -->
+	<sql id="conditions"> 
+	  <dynamic prepend="where">
+	 	<isNotEmpty prepend="and">
+	    	f.status > 0 
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "id">
+	    	f.ID = #id#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "funcType">
+	    	f.funcType=#funcType#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "funcName">
+	    	f.funcName like '%$funcName$%'
+	    </isNotEmpty>
+	  </dynamic>
+	</sql>
+	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="foMap">
+		<result property="text" column="TEXT"/>
+		<result property="children" column="CHILDREN" select="Func.getChildren"/>
+		<result property="boo" column="ISCHECKED"/>
+		<result property="state" column="STATE"/>
+		<result property="attributes" column="FATHERID" select="Func.getAttributes"/>
+	</resultMap>
+	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="showMap">
+		<result property="text" column="TEXT"/>
+		<result property="attributes" column="FID" select="Func.getAttributes"/>
+	</resultMap>
+	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="opMap">
+		<result property="text" column="TEXT"/>
+	</resultMap>
+	<!-- 插入功能 -->
+	<insert id="insertFunc" parameterClass="Func">
+		<![CDATA[
+			insert into ccs.funcs(ID,FUNCNAME,DESCRIPTION,FUNCURL,FUNCTYPE,FUNCPID,ISACTIVE,ISINSIDE,STATUS,SYSINSTTIME)
+				values(ccs.seqsystemid.nextval,#funcName#,#description#,#funcUrl#,#funcType#,#funcPid#,#isActive#,#isInside#,#status#,SYSDATE)
+		]]>
+	</insert>
+	<!-- 查询功能 -->
+	<select id="findFuncById" parameterClass="Integer" resultClass="Func">
+		<![CDATA[
+			select * from ccs.funcs f where f.id = #value# and f.status > 0
+		]]>
+	</select>
+	
+	<!-- 删除功能 -->
+	<update id="deleteFunc" parameterClass="java.util.Map">
+		<![CDATA[
+			update ccs.funcs f set f.status = #status#,f.sysdeltime = sysdate where f.id = #id#
+		]]>
+	</update>
+	
+	<!-- 修改功能 -->
+	<update id="updateFunc" parameterClass="Func">
+		<![CDATA[ update ccs.funcs f ]]>
+		<dynamic prepend="set">
+			<isNotEmpty prepend="," property="funcName">
+				<![CDATA[ f.funcname = #funcName# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="description">
+				<![CDATA[ f.description = #description# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="funcUrl">
+				<![CDATA[ f.funcurl = #funcUrl# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="funcType">
+				<![CDATA[ f.functype = #funcType# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="sysEditTime">
+				<![CDATA[ f.sysedittime = sysdate ]]>
+			</isNotEmpty>
+		</dynamic>
+		<![CDATA[ where f.id = #id# ]]>
+	</update>
+	
+	<!-- 分页查询 -->
+	<select id="selectFuncByPage" resultClass="Func">
+		<![CDATA[
+			select * from (
+				select rownum r , t.* from (
+					select f.* from ccs.funcs f where f.status > 0 order by f.id desc  ) t  
+				where rownum <= #end# ) 
+			where r > #begin#
+		]]>
+	</select>
+	
+	<!-- 分页总数 -->
+    <select id="selectFuncByCount" parameterClass="java.util.Map" resultClass="Integer">
+		<![CDATA[
+			select count(*) from ccs.funcs f where f.status > 0
+		]]>
+	</select>
+	
+	<select id="selectAllFuncs" resultClass="Func">
+		<![CDATA[
+			select f.* from ccs.funcs f where f.status > 0 order by f.id desc
+		]]>
+	</select>
+	
+	<select id="selectFuncOpsTree" resultMap="foMap">
+		<![CDATA[
+			select distinct f.funcname text,f.id children,f.id fatherid,0 as ischecked,
+			case when exists (select 1 from  ccs.funcsops os where os.funcid = f.id) then 'closed' else '' end state 
+			from ccs.funcs f
+			left join ccs.funcsops fc on fc.funcid = f.id
+			left join ccs.ops o on o.id = fc.opsid and o.status > 0
+			where f.status > 0 
+		]]>
+	</select>
+	
+	<select id="selectFuncOpsTreeByList" resultMap="foMap" parameterClass="java.util.ArrayList">
+		<![CDATA[
+			select distinct f.funcname text,f.id children,f.id fatherid,
+			case when exists (select 1 from  ccs.funcsops os where os.funcid = f.id) then 'closed' else '' end state
+		]]>
+		<dynamic prepend=",">
+			<![CDATA[
+				case when exists (select  1 from ccs.funcs c where c.id in 
+			]]>
+			<iterate open="(" close=")" conjunction=",">
+				#value[]#
+			</iterate>
+			<![CDATA[
+				and c.id = f.id
+				) then 1 else 0 end as ischecked
+			]]>
+		</dynamic>
+		<![CDATA[
+			from ccs.funcs f
+			left join ccs.funcsops fc on fc.funcid = f.id
+			left join ccs.ops o on o.id = fc.opsid and o.status > 0
+			where f.status > 0 
+		]]>
+	</select>
+	
+	<select id="getChildren" resultMap="opMap" parameterClass="Integer">
+		<![CDATA[
+			select o.opsname text,o.id opsid from ccs.ops o
+			inner join ccs.funcsops fc on o.id = fc.opsid
+			where o.status > 0 and fc.funcid = #value#
+		]]>
+	</select>
+	
+	<select id="queryFuncByList" parameterClass="java.util.ArrayList" resultMap="showMap">
+		<![CDATA[
+			select f.funcname text,f.id fid from ccs.funcs f where f.status > 0 and f.id in
+		]]>
+		<iterate open="(" close=")" conjunction=",">
+			#value[]#
+		</iterate>
+	</select>
+	
+	<select id="getAttributes" resultClass="java.util.HashMap" parameterClass="Integer">
+		<![CDATA[
+			select f.id,f.funcname,f.funcurl from ccs.funcs f where f.id = #value# and f.status > 0
+		]]>
+	</select>
+	
+	<insert id="addDisFuncOps" parameterClass="java.util.Map">
+		<![CDATA[
+			insert into ccs.funcsops(id,funcid,opsid,sortno,sysinsttime)
+				values(ccs.seqfuncsopsid.nextval,#funcId#,#opsId#,#sortNo#,sysdate)
+		]]>
+	</insert>
+	
+	<delete id="delDisFuncOps" parameterClass="Integer">
+		<![CDATA[
+			delete from ccs.funcsops t where t.funcId = #value#
+		]]>
+	</delete>
+	
+	<!-- 根据前台传的条件查询list -->
+	<select id="getFuncSearch" parameterClass="Map" resultClass="Func">
+	
+		<![CDATA[select * from (
+				select rownum r , t.* from (
+					select f.* from ccs.funcs f
+		]]>
+		<include refid="conditions"/>
+		<![CDATA[
+		order by f.id desc  ) t  
+				where rownum <= #EasyUIPage.end# ) 
+			where r > #EasyUIPage.begin#
+		]]>
+	</select>
+	
+	
+	<!-- 根据前台传的条件查询Count -->
+	<select id="getFuncCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from ccs.funcs f
+		<include refid="conditions"/>
+	</select>
+</sqlMap>

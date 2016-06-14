@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SMS">
+<resultMap class="sms" id="resulMap">
+  		<result property="id" column="ID"/>
+  		<result property="loginId" column="LOGINID"/>
+  		<result property="bid" column="BID"/>
+  		<result property="companyName" column="COMPANYNAME"/>
+  		<result property="status" column="STATUS"/>
+  		<result property="btype" column="BTYPE"/>
+  		<result property="cateGory" column="CATEGORY"/>
+  		<result property="phone" column="PHONE"/>
+  		<result property="project" column="PROJECT"/>
+  		<result property="issend" column="ISSEND"/>
+  		<result property="sendTime" column="SENDTIME"/>
+  		<result property="statusName" column="STATUSNAME"/>
+  		<result property="systemtype" column="SYSTEMTYPE"/>
+  		<result property="smsContent" column="SMSCONTENT"/>
+  		<result property="tmpStatus" column="TMPSTATUS"/>
+  		<result property="sysInstTime" column="SYSINSTTIME"/>
+  		<result property="sysDitTime" column="SYSEDITTIME"/>
+  		<result property="sysDelTime" column="SYSDELTIME"/>
+  		<result property="url" column="URL"/>
+  		<result property="regioncode" column="REGIONCODE"/>
+  		<result property="permission" column="PERMISSION"/>
+  		<result property="tableId" column="TABLEID"/>
+  	</resultMap>
+  	
+  	<sql id="flag">
+  		<isNotNull property="loginid">
+  			and s.loginid = #loginid# 
+  		</isNotNull>
+  		<isNotNull property="systemTpye">
+  			and s.systemtype = #systemTpye# 
+  		</isNotNull>
+  	</sql>
+  
+  	<select id="find" resultMap="resulMap">
+       select * from smsrecord s where 1=1 
+       <include refid="flag"/>
+  	</select>
+  	
+  	<select id="finCount" resultClass="int">
+  		select count(*) from smsrecord s where 1=1 
+  		<include refid="flag"/>
+  		 and s.status > 0
+  	</select>
+  	
+  	<select id="cutpage" resultMap="resulMap">
+		<![CDATA[
+			select * from (
+     	 		select rownum r,t.* from (select s.* from smsrecord s where s.loginid = #loginid# and s.systemtype = #systemTpye# and s.status > 0 ) t where rownum <= #end# ) where r > #begin#
+		]]>
+	</select>
+	
+  	<!-- 修改短信status -->
+  	<update id="updateStatus">
+  		update smsrecord set status = #status#, sysedittime = sysdate where id = #smsID#
+  	</update>
+  	
+  	<!-- 检查短信状态 -->
+  	<select id="checkSmsStatus" parameterClass="int" resultClass="int">
+  		select s.status from smsrecord s where s.id = #smsId#
+  	</select>
+</sqlMap>
+
+
+

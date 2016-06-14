@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+url="service/"+GennericQueryService中方法名
+view 为需要返回刷新的界面的路径，如typeListManager/typeList
+fieldId 字段名称    fieldName中文名称  validateType验证类型   fieldLength 字段长度  linkType 查询条件类型 (less more and or) 
+inputType 表单类型( text hidden option)  queryInterface 下拉数据查询接口名称    optionValue
+ -->
+<configurations>
+	<queryConfiguration id="xxx">
+		<field fieldName="人员名称" validateType="fds" fieldLength="13" linkType="" inputType="text" queryInterface="" fieldId="field1"></field>
+		<field fieldName="身份证号" validateType="" fieldLength="18" linkType="" inputType="text" queryInterface="" fieldId="field1"></field>
+		<field fieldName="职业" validateType="" fieldLength="13" linkType="" inputType="text" queryInterface="" fieldId="field1"></field>
+		<field fieldName="人员名称1" validateType="" fieldLength="13" linkType="" inputType="hidden" queryInterface="" fieldId="field1"></field>
+		<field fieldName="人员名称2" validateType="" fieldLength="13" linkType="" inputType="hidden" queryInterface="" fieldId="field1"></field>
+		<field fieldName="人员名称2" validateType="" fieldLength="13" linkType="" inputType="button" queryInterface="" fieldId="field1"></field>
+		<field fieldId="briefName" fieldName="下拉选择" validateType="text" fieldLength="30" linkType="" inputType="select" queryInterface="">
+			<field fieldName="选项一" optionValue="1111"></field>
+			<field fieldName="选项二" optionValue="3333"></field>
+			<field fieldName="选项三" optionValue="3333"></field>
+		</field>
+		<field fieldId="date" fieldName="日期" validateType="date" fieldLength="" linkType="" inputType="date"></field>
+	</queryConfiguration>
+	<queryConfiguration id="xxx">
+		<field fieldName="名称1" validateType="" fieldLength="13" linkType="" inputType="select" queryInterface="" fieldId="field1"></field>
+		<field fieldName="名称2" validateType="" fieldLength="18" linkType="" inputType="select" queryInterface="" fieldId="field1"></field>
+		<field fieldName="名称3" validateType="" fieldLength="13" linkType="" inputType="text" queryInterface="" fieldId="field1"></field>
+		<field fieldName="名称4" validateType="" fieldLength="13" linkType="" inputType="input" queryInterface="" fieldId="field1"></field>
+		<field fieldName="名称15" validateType="" fieldLength="13" linkType="" inputType="text" queryInterface="" fieldId="field1"></field>
+	</queryConfiguration>
+	
+	
+	<queryConfiguration id="typeList" url="service/getTypeListSearch" view="typeListManager/typeList">
+		<field fieldId="kind" fieldName="标准类型编码" validateType="text" fieldLength="5" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="typename" fieldName="标准类型" validateType="text" fieldLength="40" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="type" fieldName="标准类型值" validateType="text" fieldLength="80" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="ident" fieldName="系统标志" validateType="text" fieldLength="20" linkType="" inputType="text" queryInterface=""></field>
+	</queryConfiguration>
+	
+	<queryConfiguration id="information" url="service/getInformation" view="typeListManager/typeList">
+		<field fieldId="infotype" fieldName="公告类型" validateType="text" fieldLength="32" linkType="" inputType="select" queryInterface="">
+			<field fieldName="全部" optionValue=""></field>
+			<field fieldName="公告" optionValue="公告"></field>
+			<field fieldName="提示" optionValue="提示"></field>
+			<field fieldName="工具" optionValue="工具"></field>
+		</field>
+		<field fieldId="infotitle" fieldName="公告标题" validateType="text" fieldLength="64" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="createruser" fieldName="发布人" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="startSysinsttime" fieldName="发布开始时间" validateType="date" fieldLength="more" linkType="" inputType="date" queryInterface=""></field>
+		<field fieldId="endSysinsttime" fieldName="发布结束时间" validateType="date" fieldLength="less" linkType="" inputType="date" queryInterface=""></field>
+<!--		<field fieldId="sendstatus" fieldName="状态" validateType="text" fieldLength="" linkType="" inputType="text" queryInterface=""></field>-->
+	</queryConfiguration>
+	
+	<queryConfiguration id="userManager" url="service/getUserList" view="typeListManager/typeList">
+		<field fieldId="userName" fieldName="人员姓名" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="usertype" fieldName="人员类型" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="loginid" fieldName="登陆账号" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="ownerid" fieldName="证件号码" validateType="text" fieldLength="128" linkType="" inputType="text" queryInterface=""></field>
+	</queryConfiguration>
+	
+	<queryConfiguration id="model" url="service/getModel" view="typeListManager/typeList">
+		<field fieldId="modName" fieldName="模块名称" validateType="text" fieldLength="64" linkType="" inputType="text" queryInterface=""></field>
+	</queryConfiguration>
+	
+	<queryConfiguration id="system" url="service/getSystem" view="typeListManager/typeList">
+		<field fieldId="sysName" fieldName="系统名称" validateType="text" fieldLength="64" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="briefName" fieldName="系统简称" validateType="text" fieldLength="30" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="regionCode" fieldName="系统区域" validateType="text" fieldLength="64" linkType="" inputType="text" queryInterface=""></field>
+	</queryConfiguration>
+	
+	<queryConfiguration id="func" url="service/getFunc">	
+		<field fieldId="funcType" fieldName="功能类型" validateType="text" fieldLength="" linkType="" inputType="select" queryInterface="">
+			<field fieldName="全部" optionValue=""></field>
+			<field fieldName="系统" optionValue="1"></field>
+			<field fieldName="框架" optionValue="2"></field>
+			<field fieldName="接口" optionValue="3"></field>
+		</field>
+		<field fieldId="funcName" fieldName="功能名称" validateType="text" fieldLength="64" linkType="" inputType="text" queryInterface=""></field>
+	</queryConfiguration>
+	
+	<queryConfiguration id="role" url="service/getRole" view="typeListManager/typeList">
+		<field fieldId="rName" fieldName="角色名称" validateType="text" fieldLength="16" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="createrUser" fieldName="创建人" validateType="text" fieldLength="64" linkType="" inputType="text" queryInterface=""></field>
+	</queryConfiguration>
+	
+	<queryConfiguration id="position" url="service/getPosition" view="typeListManager/typeList">
+		<field fieldId="pname" fieldName="职位名称" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="pno" fieldName="职位编号" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+<!--		<field fieldId="orgname" fieldName="所属组织" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>-->
+	</queryConfiguration>
+	
+	<queryConfiguration id="syslogs" url="service/getsyslogs">
+		<field fieldId="orgname" fieldName="操作机构" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="sysname" fieldName="操作系统" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="opemod" fieldName="操作类" validateType="text" fieldLength="128" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="opefunc" fieldName="操作功能" validateType="text" fieldLength="64" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="flag" fieldName="操作标识" validateType="text" fieldLength="8" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="loginid" fieldName="操作人" validateType="text" fieldLength="32" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="startopedate" fieldName="操作开始时间" validateType="date" fieldLength="more" linkType="" inputType="date" queryInterface=""></field>
+		<field fieldId="endopedate" fieldName="操作结束时间" validateType="date" fieldLength="less" linkType="" inputType="date" queryInterface=""></field>
+		<field fieldId="regioncode" fieldName="操作区域" validateType="text" fieldLength="64" linkType="" inputType="text" queryInterface=""></field>
+		<field fieldId="ip" fieldName="操作IP" validateType="text" fieldLength="256" linkType="" inputType="text" queryInterface=""></field>
+	</queryConfiguration>
+</configurations>

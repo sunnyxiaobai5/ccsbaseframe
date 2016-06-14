@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Position">
+
+	<!-- 别名定义 -->
+	<typeAlias alias="Position" type="cn.ccsgroup.ccsframework.entity.Position" />
+	
+	<!-- 查询条件定义 -->
+	<sql id="conditions"> 
+	  <dynamic prepend="where">
+	 	<isNotEmpty prepend="and">
+	    	p.status >0
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "id">
+	    	p.ID = #id#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "pname">
+	    	p.pname like '%$pname$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "pno">
+	    	p.pno=#pno#
+	    </isNotEmpty>
+	  	 <isNotEmpty prepend="and" property = "orgname">
+	    	p.orgname like '%$orgname$%'
+	    </isNotEmpty>
+	  </dynamic>
+	</sql>
+	
+	
+	<!-- 新增职位 -->
+	<insert id="insertPosition" parameterClass="Position">
+		insert into ccs.position(ID,PNAME,PNO,ORGID,DESCRIPTION,SYSINSTTIME,STATUS)
+		values(ccs.seqpositionid.nextval,#pname#,#pno#,#orgid#,#description#,SYSDATE,#status#)
+	</insert>
+	
+	<!-- 查询职位 -->
+	<select id="queryPositions" parameterClass="java.util.Map"  resultClass="Position">
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select p.*,o.orgname from ccs.position p,ccs.organization o where p.orgid = #orgid# and p.status >0
+					and p.orgid = o.id order by p.id desc
+			) t
+		  where rownum<=#end#
+		) where r > #begin#
+		]]>
+	</select>
+	
+	<!-- 查询职位总条数 -->
+	<select id="queryPositionsCounts" parameterClass="Integer"  resultClass="Integer">
+		select count(*) from ccs.position p where p.orgid = #orgid# and p.status >0
+	</select>
+	
+	<!-- 通过ID查询职位 -->
+	<select id="queryPosition" parameterClass="Integer"  resultClass="Position">
+		select p.*,o.orgname from ccs.position p,ccs.organization o where p.id = #id#
+		and p.orgid = o.id
+	</select>
+	
+	<!-- 删除职位 -->
+	<update id="deletePosition" parameterClass="java.util.Map" >
+		update ccs.position  set status = #status#,SYSDELTIME=SYSDATE where id = #id#
+	</update>
+	
+	<!-- 修改职位 -->
+	<update id="updatePosition" parameterClass="Position">
+		update ccs.position  set pname = #pname#,PNO = #pno#,DESCRIPTION = #description#, SYSEDITTIME=SYSDATE
+		where id = #id#
+	</update>
+	
+	<!-- 根据前台传的条件查询list -->
+	<select id="getPositionSearch" parameterClass="Map" resultClass="Position">
+	
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+			select p.* from ccs.position p
+		]]>
+		<include refid="conditions"/>
+		<![CDATA[
+					order by p.id desc
+			) t
+		  where rownum<=#EasyUIPage.end#
+		) where r > #EasyUIPage.begin#
+		]]>
+	</select>
+	
+	
+	<!-- 根据前台传的条件查询Count -->
+	<select id="getPositionCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from ccs.position p
+		<include refid="conditions"/>
+	</select>
+	
+</sqlMap>

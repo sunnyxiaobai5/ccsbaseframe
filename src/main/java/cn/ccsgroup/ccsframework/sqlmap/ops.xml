@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Ops">
+	
+	<typeAlias alias="Ops" type="cn.ccsgroup.ccsframework.entity.Ops"/>
+	<parameterMap class="cn.ccsgroup.ccsframework.entity.Ops" id="opsMap">
+		<parameter property="funcId"/>
+	</parameterMap>
+	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="treeMap">
+		<result property="text" column="text"/>
+		<result property="attributes" column="OPSID" select="Ops.getAttributes"/>
+	</resultMap>
+	
+	<insert id="insertOps" parameterClass="Ops">
+		<![CDATA[
+			insert into ccs.ops(ID,OPSNAME,ISACTIVE,ISSTART,STATUS,OPSURL,SYSINSTTIME)
+				values(ccs.seqsystemid.nextval,#opsName#,#isActive#,#isStart#,#status#,#opsUrl#,sysdate)
+		]]>
+		<selectKey keyProperty="id" resultClass="int">
+			 SELECT CCS.SEQSYSTEMID.CURRVAL FROM DUAL
+		</selectKey>
+	</insert>
+	
+	<select id="findOps" parameterClass="Integer" resultClass="Ops">
+		<![CDATA[
+			select * from ccs.ops o where o.id = #value#
+		]]>
+	</select>
+	
+	<!-- 根据funcId查询操作 -->
+	<select id="findOpsByFuncId">
+		select o.id,o.opsname,o.status,o.isactive,o.isstart,fo.funcid from ccs.funcsops fo inner join ccs.ops o on o.id = fo.opsid 
+		where fo.funcid = #funcId# order by fo.sortno
+	</select>
+	
+	<!-- 查询所有的系统操作 -->
+	<select id="findAllOpsByPage" parameterClass="java.util.Map" resultClass="Ops">
+		<![CDATA[
+		 	select * from (
+			select rownum r,t.* from (
+				select * from ccs.ops o where o.status > 0 and o.isactive > 0 
+				]]>
+		<isNotEmpty prepend="and" property="funcId">
+			<![CDATA[  exists (select 1 from ccs.funcsops fs where fs.opsid = o.id and fs.funcid = #funcId#)]]>
+		</isNotEmpty>
+		<![CDATA[		
+				order by id desc 
+			) t where rownum <= #end# ) where r > #begin#
+		]]>
+	</select>
+	
+	<select id="queryCount" parameterClass="java.util.Map" resultClass="Integer">
+		<![CDATA[
+			select count(*) from ccs.ops o where o.status > 0 and o.isactive > 0 
+				and exists (select 1 from ccs.funcsops fs where fs.opsid = o.id and fs.funcid = #funcId#)
+		]]>
+	</select>
+	
+	<!-- 验证是否存在操作 -->
+	<select id="findIsRepeatByName" parameterClass="java.util.Map" resultClass="Ops">
+		select * from ccs.ops o where o.id != #opsId# and o.opsname = #opsName# and o.status > 0
+	</select>
+	
+	<!-- 修改操作 -->
+	<update id="updateOps" parameterClass="Ops">
+		<![CDATA[ update ccs.ops o ]]>
+		<dynamic prepend="set">
+			<isNotEmpty prepend="," property="opsName">
+				<![CDATA[ o.opsname = #opsName# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="isActive">
+				<![CDATA[ o.isactive = #isActive# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="isStart">
+				<![CDATA[ o.isstart = #isStart# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="opsUrl">
+				<![CDATA[ o.opsurl = #opsUrl# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="sysEditTime">
+				<![CDATA[ o.sysedittime = sysdate]]>
+			</isNotEmpty>
+		</dynamic>
+		<![CDATA[ where o.id = #id# ]]>
+	</update>
+	
+	<update id="deleteOps" parameterClass="java.util.Map">
+		<![CDATA[ update ccs.ops o ]]>
+		<dynamic prepend="set">
+			<isNotEmpty prepend="," property="status">
+				<![CDATA[ o.status = #status# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="sysEditTime">
+				<![CDATA[ o.sysedittime = sysdate ]]>
+			</isNotEmpty>
+		</dynamic>
+		<![CDATA[ where o.id = #opsId# ]]>
+	</update>
+	
+	<delete id="deleteFuncOps" parameterClass="java.util.Map">
+		<![CDATA[	
+			delete from ccs.funcsops fos where fos.opsid = #opsId# and fos.funcid = #funcId# 
+		]]>
+	</delete>
+	
+	
+	<!-- 通过OPSID查询已别关联的OPS  -->
+	<select id="findIsUsedByOpsId" parameterClass="Integer" resultClass="Ops">
+		<![CDATA[
+			select o.* from ccs.ops o,ccs.funcsops p where o.id = p.opsid and p.opsid = #value#
+		]]>
+	</select>
+	
+	<select id="findOpsTreeList" resultMap="treeMap">
+		<![CDATA[
+			select o.opsname text,o.id opsid from ccs.ops o where o.status > 0
+		]]>
+	</select>
+	
+	<select id="findOpsTreeListByFuncId" resultMap="treeMap" parameterClass="java.util.Map">
+		<![CDATA[
+			select o.opsname text,o.id opsid from ccs.ops o 
+			inner join ccs.funcsops fc on fc.opsid = o.id
+			where o.status > 0 and fc.funcid = #funcId# 
+		]]>
+	</select>
+	
+	<select id="getAttributes" parameterClass="Integer" resultClass="java.util.HashMap">
+		<![CDATA[
+			select o.opsname,o.id from ccs.ops o where o.status > 0 and o.id = #value#
+		]]>
+	</select>
+	
+	<select id="queryFuncOpsSort" parameterClass="Integer">
+		<![CDATA[
+			select count(*) + 1 as sortno from ccs.funcsops c where c.funcid = #value#
+		]]>
+	</select>
+</sqlMap>

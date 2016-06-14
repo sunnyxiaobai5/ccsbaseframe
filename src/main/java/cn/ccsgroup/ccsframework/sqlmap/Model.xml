@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Model">
+
+	<typeAlias alias="model" type="cn.ccsgroup.ccsframework.entity.Model" />
+		
+	<resultMap id="ModelBean" class="model">
+		<result property="id" column="ID"/>
+		<result property="modName" column="MODNAME"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="isActive" column="ISACTIVE"/>
+		<result property="isInside" column="ISINSIDE"/>
+		<result property="sysinsttime" column="SYSINSTTIME"/>
+		<result property="sysedittime" column="SYSEDITTIME"/>
+		<result property="sysdeltime" column="SYSDELTIME"/>
+		<result property="status" column="STATUS" />
+		<result property="alias" column="ALIAS" />
+	</resultMap>
+	
+	<resultMap id="SModel" class="model">
+		<result property="id" column="ID"/>
+		<result property="modName" column="MODNAME"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="isActive" column="ISACTIVE"/>
+		<result property="isInside" column="ISINSIDE"/>
+		<result property="sysinsttime" column="SYSINSTTIME"/>
+		<result property="sysedittime" column="SYSEDITTIME"/>
+		<result property="sysdeltime" column="SYSDELTIME"/>
+		<result property="status" column="STATUS" />
+		<result property="alias" column="ALIAS" />
+		<result property="isChecked" column="ISCHECKED" />
+	</resultMap>
+	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="showMap">
+		<result property="text" column="text"/>
+		<result property="attributes" column="MODID" select="Model.getAttributes"/>
+	</resultMap>
+	
+	<!-- 查询条件定义 -->
+	<sql id="conditions"> 
+	  <dynamic prepend="where">
+	 	<isNotEmpty prepend="and">
+	    <![CDATA[ 	status <> '-1'  ]]>
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "id">
+	    	m.ID = #id#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "modName">
+	    	m.modName like '%$modName$%'
+	    </isNotEmpty>
+	  </dynamic>
+	</sql>
+	
+	
+   <insert id="insertModel" parameterClass="Model" >
+   		insert into ccs.mods (id,modName,description,isActive,isInside,sysinsttime,status,alias) 
+   	values(ccs.seqsystemid.Nextval,#modName#,#description#,#isActive#,#isInside#,sysdate,#status#,#alias#)
+   </insert>
+
+	
+	<update id="updateModel" parameterClass="Model" >
+		<![CDATA[ update ccs.mods ]]>
+			<dynamic prepend="set">
+				<isNotEmpty prepend="," property="modName">
+				 <![CDATA[	 modName=#modName#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="description">
+				 <![CDATA[	 description=#description#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="isActive">
+				 <![CDATA[	 isActive=#isActive#]]>	
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="status">
+				 <![CDATA[	 status=#status#]]>	
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="alias">
+				 <![CDATA[	 alias=#alias#]]>	
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="sysEditTime">
+				 <![CDATA[	sysedittime=sysdate]]>	
+				 </isNotEmpty>
+			</dynamic>
+		<![CDATA[ where id=#id# ]]>
+	</update>
+
+
+	<select id="getAllModleByPage" parameterClass="java.util.Map" resultMap="ModelBean" >
+		<![CDATA[
+			select * from (
+				select rownum r , t.* from (
+					select * from ccs.mods where status <> '-1'  order by id desc) t 
+				where rownum <= #end# ) 
+			where r > #begin#
+		]]>
+	</select>
+	
+	<select id="getAllModle" parameterClass="Integer" resultMap="ModelBean" >
+		<![CDATA[
+			select * from ccs.mods where status <> #status#    order by id 
+		]]>
+	</select>
+	
+	<!-- 模糊查询模块 -->
+	<select id="getModleByCondition" parameterClass="java.util.Map" resultMap="ModelBean">
+		<![CDATA[
+			select * from (
+				select rownum r , t.* from (
+					select * from ccs.mods m where 1=1 ]]>
+				<isNotEmpty prepend="and" property="modName">
+				 <![CDATA[	 m.modName like '%$modName$%' ]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="and" property="alias">
+				 <![CDATA[	  m.alias #alias# ]]>	
+				 </isNotEmpty>
+			<![CDATA[		 
+					 and  status <> #status#    order by id desc) t 
+				where rownum <= #end# ) 
+			where r > #begin#
+		]]>
+	</select>
+	
+	<select id="getSysUpdateModel" parameterClass="java.util.Map" resultMap="SModel">
+		<![CDATA[
+			select * from (
+				select rownum r , t.* from (
+					select m.*,case when exists (
+						select 1 from ccs.sysmod sm where sm.sysid = #sysId# and sm.modid = m.id
+						) then 1 else 0 end ischecked from ccs.mods m where status > 0   order by id desc) t 
+				where rownum <= #end# ) 
+			where r > #begin#
+		]]>
+	</select>
+	
+	
+	<select id="queryCount" parameterClass="java.util.Map" resultClass="Integer">
+		<![CDATA[
+			select count(*) from ccs.mods m where m.status <> #status#
+		]]>
+	</select>
+	
+	<select id="queryModelById" resultMap="showMap" parameterClass="Integer">
+		<![CDATA[
+			select m.modname text,m.id modid from ccs.mods m where m.id = #value#
+		]]>
+	</select>
+	
+	<select id="getAttributes" resultClass="java.util.HashMap" parameterClass="Integer">
+		<![CDATA[
+			select m.id modid,m.modname from ccs.mods m where m.id = #value#
+		]]>
+	</select>
+	
+	<!-- 查询模块 -->
+	<select id="getModleByID" parameterClass="java.util.Map" resultMap="ModelBean">
+		select * from ccs.mods m where m.id = #id# 
+		<isNotNull property="status">
+			<isNotEmpty prepend="and" property="status">
+				m.status != #status#
+	  		</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+		<!-- 删除模块 -->
+	<update id="deleteMod" parameterClass="java.util.Map">
+		update ccs.mods m set m.status = #status#,m.sysdeltime=sysdate where m.id = #id#
+	</update>
+	
+	<!-- 根据前台传的条件查询list -->
+	<select id="getModsSearch" parameterClass="Map" resultClass="model">
+	
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select * from ccs.mods m 
+		]]>
+		<include refid="conditions"/>
+		<![CDATA[
+					order by m.id desc
+			) t
+		  where rownum<=#EasyUIPage.end#
+		) where r > #EasyUIPage.begin#
+		]]>
+	</select>
+	
+	
+	<!-- 根据前台传的条件查询Count -->
+	<select id="getModelCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from ccs.mods m
+		<include refid="conditions"/>
+	</select>
+	
+</sqlMap>

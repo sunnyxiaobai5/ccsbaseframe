@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SysParam">
+
+	<!-- 别名定义 -->
+	<typeAlias alias="SysParam" type="cn.ccsgroup.ccsframework.entity.SysParam" />
+	
+	<!-- 查询操作 -->
+	<select id="querySysParam" parameterClass="java.util.Map"   resultClass="SysParam">
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select p.*,(select sysname from ccs.logisystem l where l.id = p.sysid) as sysname
+					 from ccs.sysparam p where p.status >0
+				    order by p.id desc
+			) t
+		  where rownum<=#end#
+		) where r > #begin#
+		]]>
+	</select>
+	<!-- 查询操作总条数 -->
+	<select id="querySysParamCounts"  resultClass="Integer">
+		<![CDATA[
+			select count(*) from SysParam p where p.status >0
+		]]>
+	</select>
+	<!-- 通过ID查询系统参数信息 -->
+	<select id="querySysParamById"  resultClass="SysParam" parameterClass="Integer">
+		<![CDATA[
+			select p.*,(select sysname
+                          from ccs.logisystem l
+                         where l.id = p.sysid) as sysname
+                  from ccs.sysparam p
+                 where p.status > 0 and rownum=1 and p.id=#value#
+                 order by p.id desc
+         ]]>
+	</select>
+	
+	<!-- 查询系统平台列表 -->
+	<select id="queryLoginSystemList"  resultClass="LogiSystem">
+		<![CDATA[
+			select sysname,id from ccs.logisystem t where t.status>0
+		]]>
+	</select>
+	
+	<!-- 插入系统参数操作 -->
+	<insert id="insertSysParam" parameterClass="SysParam">
+		<![CDATA[
+			insert into ccs.sysparam(ID,PARAMTYPE,PARAMNAME,PARAMVALUE,STATUS,SYSINSTTIME,SYSEDITTIME,SYSDELTIME,SYSID)
+				values(ccs.SEQSYSPARAMID.nextval,#paramtype#,#paramname#,#paramvalue#,#status#,sysdate,#sysedittime#,#sysdeltime#,#sysid#)
+		]]>
+	</insert>
+	
+	<!-- 更新系统参数操作 -->
+	<update id="updateSysParam">
+		<![CDATA[
+			update ccs.sysparam set PARAMTYPE=#paramtype#,PARAMNAME=#paramname#,
+			PARAMVALUE=#paramvalue#,STATUS=#status#,SYSEDITTIME=sysdate,SYSID=#sysid# where ID=#id#
+		]]>
+	</update>
+	
+	<!-- 删除系统参数，仅更改记录状态 -->
+	<update id="deleteSysParam">
+		<![CDATA[
+			update ccs.sysparam set STATUS=-1,SYSDELTIME=sysdate where ID=#id#
+		]]>
+	</update>
+	
+</sqlMap>

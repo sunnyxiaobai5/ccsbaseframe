@@ -1,0 +1,713 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="UserManager">
+
+	<typeAlias alias="userManager" type="cn.ccsgroup.ccsframework.entity.UserManager"/>
+	<typeAlias alias="role" type="cn.ccsgroup.ccsframework.entity.Role"/>
+	<typeAlias alias="userRoles" type="cn.ccsgroup.ccsframework.entity.UserRoles"/>
+	<typeAlias alias="org" type="cn.ccsgroup.ccsframework.entity.Org"/>
+	<typeAlias alias="orgUsers" type="cn.ccsgroup.ccsframework.entity.OrgUsers"/>
+	<typeAlias alias="node" type="cn.ccsgroup.ccsframework.base.entity.TreeNode" />
+	<typeAlias alias="logiSystem" type="cn.ccsgroup.ccsframework.entity.LogiSystem"/>
+	<typeAlias alias="rolesPermissions" type="cn.ccsgroup.ccsframework.entity.RolesPermissions"/>
+	<typeAlias alias="model" type="cn.ccsgroup.ccsframework.entity.Model"/>
+	<typeAlias alias="func" type="cn.ccsgroup.ccsframework.entity.Func"/>
+	<typeAlias alias="ops" type="cn.ccsgroup.ccsframework.entity.Ops"/>
+	<typeAlias alias="position" type="cn.ccsgroup.ccsframework.entity.Position"/>
+	<typeAlias alias="usersPositions" type="cn.ccsgroup.ccsframework.entity.UsersPositions"/>
+	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="treeMap">
+		<result property="text" column="text"/>
+		<result property="children" column="children" />
+		<result property="attributes" column="attributes" />
+	</resultMap>
+		
+	<parameterMap class="cn.ccsgroup.ccsframework.entity.UserManager" id="userManagerMap">
+		<parameter property="status"/>
+		<parameter property="id"/>
+	</parameterMap>
+	
+	<resultMap id="SysNodes" class="java.util.HashMap" >
+		<result property="key" column="NODEID"/>
+		<result property="value" column="ID"/>
+	</resultMap>
+	
+	<resultMap id="nodeSys" class="node">
+		<result property="children" column="CHILDREN" select="UserManager.queryModsNode"/>
+		<result property="attributes" column="ATTRIBUTE" select="UserManager.getSysAttributesNode" />
+		<result property="text" column="TEXT"/>
+	</resultMap>
+	<resultMap id="nodeMods" class="node">
+		<result property="children" column="CHILDREN"  select="UserManager.queryFunsNode"/>
+		<result property="attributes" column="ATTRIBUTE" select="UserManager.getModsAttributesNode" />
+		<result property="text" column="TEXT" />
+	</resultMap>
+	<resultMap id="nodeFuns" class="node">
+		<result property="children" column="CHILDREN" select="UserManager.queryOpsNode"/>
+		<result property="attributes" column="ATTRIBUTE" select="UserManager.getFunsAttributesNode" />
+		<result property="text" column="TEXT"/>
+	</resultMap>
+	<resultMap id="nodeOps" class="node">
+		<result property="text" column="TEXT" />
+		<result property="attributes" column="ATTRIBUTE" select="UserManager.getOpsAttributesNode" />
+	</resultMap>
+	
+	<!-- lp3 新增用户 -->
+	<insert id="addUserManagerInfo" parameterClass="userManager">
+		 insert into ccs.users
+		  (id,
+		   loginid,
+		   userName,
+		   gender,
+		   certifykind,
+		   password,
+		   usertype,
+		   usercode,
+		   idtype,
+		   ownerid,
+		   certaddr,
+		   nationality,
+		   birthdate,
+		   phone,
+		   knowledge,
+		   email,
+		   address,
+		   fax,
+		   note,
+		   isactive,
+		   sysinsttime,
+		   status)
+		values
+		  (ccs.sequserid.nextval,
+		   #loginid#,
+		   #userName#,
+		   #gender#,
+		   #certifykind#,
+		   #password#,
+		   #usertype#,
+		   ccs.sequsercode.nextval,
+		   #idtype#,
+		   #ownerid#,
+		   #certaddr#,
+		   #nationality#,
+		   #birthdate#,
+		   #phone#,
+		   #knowledge#,
+		   #email#,
+		   #address#,
+		   #fax#,
+		   #note#,
+		   #isactive#,
+		   sysdate,
+		   #status#)
+		<selectKey resultClass="int" keyProperty="id" >
+		      SELECT ccs.sequserid.currval FROM DUAL
+		  </selectKey> 
+	</insert>
+	
+	<!-- lp3 新增用户组织机构 -->
+	<insert id="addUserOfOrgInfo" parameterClass="orgUsers">
+		insert into ccs.orgusers(id,orgid,userid,sysinsttime,status)
+			values(ccs.sequsersrolesid.nextval,#orgid#,#userid#,sysdate,#status#)	
+		<selectKey resultClass="int" keyProperty="id" >
+	      SELECT ccs.sequsersrolesid.currval FROM DUAL
+	  </selectKey> 
+    </insert>
+	
+	<!-- 新增用户 -->
+	<insert id="insertUserManager" parameterClass="userManager">
+		insert into ccs.users
+		  (id,
+		   loginid,
+		   userName,
+		   gender,
+		   certifykind,
+		   password,
+		   usertype,
+		   usercode,
+		   idtype,
+		   ownerid,
+		   certaddr,
+		   nationality,
+		   birthdate,
+		   phone,
+		   knowledge,
+		   email,
+		   address,
+		   fax,
+		   note,
+		   isactive,
+		   sysinsttime,
+		   status)
+		values
+		  (#id#,
+		   #loginid#,
+		   #userName#,
+		   #gender#,
+		   #certifykind#,
+		   #password#,
+		   #usertype#,
+		   ccs.sequsercode.nextval,
+		   #idtype#,
+		   #ownerid#,
+		   #certaddr#,
+		   #nationality#,
+		   #birthdate#,
+		   #phone#,
+		   #knowledge#,
+		   #email#,
+		   #address#,
+		   #fax#,
+		   #note#,
+		   #isactive#,
+		   sysdate,
+		   #status#)	
+    </insert>
+    
+    <insert id="addRoleOfUser" parameterClass="role">
+		insert into ccs.roles
+		  (id,
+		   rname,
+		   remark,
+		   regionCode,
+		   issysdef,
+		   sysinsttime,
+		   status)
+		values
+		  (#id#,
+		   #rName#,
+		   #remark#,
+		   #regionCode#,
+		   #issysdef#,
+		   sysdate,
+		   #status#)	
+    </insert>
+    
+    <insert id="addUserRolesOfUser" parameterClass="userRoles">
+		insert into ccs.usersroles
+		  (id,
+		   userid,
+		   roleid,
+		   sysinsttime,
+		   status)
+		values
+		  (ccs.sequsersrolesid.nextval,
+		   #userid#,
+		   #roleid#,
+		   sysdate,
+		   #status#)	
+    </insert>
+    
+    <insert id="addUserOfOrg" parameterClass="orgUsers">
+		insert into ccs.orgusers
+		  (id,
+		   orgid,
+		   userid,
+		   sysinsttime,
+		   status)
+		values
+		  (ccs.sequsersrolesid.nextval,
+		   #orgid#,
+		   #userid#,
+		   sysdate,
+		   #status#)	
+    </insert>
+    
+    <insert id="saveUserPostion" parameterClass="usersPositions">
+		insert into ccs.userspositions
+		  (id,
+		   userid,
+		   positionid,
+		   sysinsttime,
+		   status)
+		values
+		  (ccs.sequsersrolesid.nextval,
+		   #userid#,
+		   #positionid#,
+		   sysdate,
+		   #status#)	
+    </insert>
+    
+    <insert id="addRolePermissions" parameterClass="rolesPermissions">
+		insert into ccs.rolespermissions
+		  (id,
+		   roleid,
+		   permissionid,
+		   sysinsttime,
+		   sysedittime,
+		   sysdeltime,
+		   status)
+		values
+		  (ccs.seqrolespermissionsid.nextval,
+		   #roleid#,
+		   #permissionid#,
+		   sysdate,
+		   sysdate,
+		   sysdate,
+		   #status#)	
+    </insert>
+    
+	 <!-- 查询用户  -->
+	<select id="initUserManager" parameterClass="java.util.Map" resultClass="userManager">
+		select * from ccs.users u where u.id = #id# and u.status > 0
+	</select>
+	
+	<!-- 删除用户 -->
+	<delete id="deleteUserManager">
+		delete from ccs.users where id = #id#
+	</delete>
+	
+	<!-- 重置人员密码 -->
+	<update id="updateUserPassword" parameterClass="userManager">
+		update ccs.users u set u.password = #loginid# where u.id = #id#
+	</update>
+	
+	<!-- 分页查询 -->
+	<select id="selectUserManagerByPage" resultClass="userManager">
+		select * from ccs.users u where u.status > 0 and u.isactive = 1 order by id desc
+	</select>
+	
+	<!-- l  搜索条件 -->
+	<sql id="flag">
+		<isNotEmpty property="userName">
+  			and u.username like '%$userName$%' 
+  		</isNotEmpty>
+  		<isNotEmpty property="usertype">
+  			and u.usertype like '%$usertype$%' 
+  		</isNotEmpty>
+  		<isNotEmpty property="loginid">
+  			and u.loginid like '%$loginid$%' 
+  		</isNotEmpty>
+  		<isNotEmpty property="ownerid">
+  			and u.ownerid like '%$ownerid$%'  
+  		</isNotEmpty>
+	</sql>
+	
+	<!-- 人员管理   l  搜索按钮（组织机构id不存在时调用该方法） -->
+	<select id="getUserManagerListByLike" resultClass="userManager">
+			select * from (select rownum r,t.* from(
+		              		select * from users u where 1=1 
+		              		<include refid="flag"/>
+		<![CDATA[             		
+		              ) t where rownum<=#end#
+				) where r > #begin#
+		]]>
+	</select>
+	<!-- 人员管理   l  搜索按钮（组织机构id不存在时调用该方法） -->
+	<select id="getUserManagerCountByLike" resultClass="Integer">
+		select count(*) from users u where 1=1
+		<include refid="flag"/>
+	</select>
+	
+	<!-- 人员管理   l  搜索按钮（组织机构id存在时调用该方法） -->
+	<select id="getUserManagerListByLikeAndOrgiD" resultClass="userManager">
+		select * from (select rownum r,t.* from(
+		              		select u.* from orgusers o,users u where o.userid = u.id and o.orgid = #orgid#
+		              		<include refid="flag"/>
+		  <![CDATA[             		
+		              ) t where rownum<=#end#
+				) where r > #begin#
+			]]>	
+	</select>
+	
+	<!-- 人员管理   l  搜索按钮（组织机构id存在时调用该方法） -->
+	<select id="getUserManagerCountByLikeAndOrgiD" resultClass="Integer">
+		select count(*) from orgusers o,users u where o.userid = u.id and o.orgid = #orgid#
+		<include refid="flag"/>
+	</select>
+	
+	<!-- 根据组织机构id查询人员 -->
+	<select id="getUserManagerList" parameterClass="java.util.Map"  resultClass="userManager">
+		<![CDATA[
+		select * from (
+     	 	select rownum r,t.* from(
+              select u.* from ccs.users u inner join ccs.orgusers ou on ou.userid = u.id where ou.orgid = #orgid# and u.status > 0 and u.isactive = 1 and ou.status > 0
+        ]]>
+        <include refid="flag"/>
+        <![CDATA[
+				) t
+			  where rownum<=#end#
+			) where r > #begin#
+		]]>
+	</select>
+	
+	<!-- 查询该组织机构下人员总条数 -->
+	<select id="getUserManagerCount" parameterClass="java.util.Map"  resultClass="Integer">
+		select count(*) from  ccs.users u inner join ccs.orgusers ou on ou.userid = u.id where ou.orgid = #orgid# and u.status > 0 and u.isactive = 1 and ou.status > 0
+        <include refid="flag"/>
+	</select>
+	
+		<!-- 根据人员id查询该人员拥有的角色 -->
+	<select id="getUserOfRoleList" parameterClass="java.util.Map"  resultClass="role">
+		<![CDATA[select * from (
+     	 select rownum r,t.* from(
+             select r.* from ccs.roles r inner join ccs.usersroles ur on ur.roleid = r.id
+			inner join ccs.users u on u.id = ur.userid where u.id = #userid# and ur.status > 0 and r.status > 0 
+			) t
+		  where rownum<=#end#
+		) where r > #begin#
+		]]>
+	</select>
+	
+	<!-- 查询人员拥有的角色的总条数 -->
+	<select id="getUserOfRoleListCount" parameterClass="java.util.Map"  resultClass="Integer">
+		select count (*) from ccs.roles r inner join ccs.usersroles ur on ur.roleid = r.id
+		inner join ccs.users u on u.id = ur.userid where u.id = #userid# and ur.status > 0 and r.status > 0 
+	</select>
+	
+	<!-- 根据所有角色 -->
+	<select id="getAllRoleList" resultClass="role">
+		select *
+		   from (select rownum r, m.*
+		           from (select distinct r.id,
+		                                 r.rname,
+		                                 r.remark,
+		                                 r.regioncode,
+		                                 r.issysdef,
+		                                 r.status,
+		                                 r.createruser,
+		                                 to_char(r.sysinsttime,
+		                                         'yyyy-mm-dd hh24:mi:ss') sysinsttime,
+		                                 r.orgid
+		                   from ccs.roles r where R.ORGID = #orgid#
+		                    and r.status > 0
+                            and r.id not in
+                            <iterate property="roleids" open="(" close=")" conjunction=",">
+                                $roleids[]$
+                            </iterate>
+		                  order by r.id desc) m
+		          where rownum &lt; = #end#)
+		  where r > #begin#
+	</select>
+	
+	<!-- 根据所有角色的总条数 -->
+	<select id="getAllRoleListCount" resultClass="Integer">
+		select count(distinct r.id) from ccs.roles r where R.ORGID = #orgid#
+        and r.status > 0
+        and r.id not in
+        <iterate property="roleids" open="(" close=")" conjunction=",">
+            $roleids[]$
+        </iterate>
+	</select>
+	
+	<!-- 修改人员 -->
+	<update id="updateUserManager" parameterClass="userManager">
+		update ccs.users u
+	   set u.loginid     = #loginid#,
+	       u.username    = #userName#,
+	       u.gender      = #gender#,
+	       u.certifykind = #certifykind#,
+	       u.password    = #password#,
+	       u.usertype    = #usertype#,
+	       u.idtype      = #idtype#,
+	       u.ownerid     = #ownerid#,
+	       u.certaddr    = #certaddr#,
+	       u.nationality = #nationality#,
+	       u.birthdate   = #birthdate#,
+	       u.phone       = #phone#,
+	       u.knowledge   = #knowledge#,
+	       u.email       = #email#,
+	       u.address     = #address#,
+	       u.fax         = #fax#,
+	       u.note        = #note#,
+	       u.isactive    = #isactive#,
+	       u.sysedittime = sysdate
+		where u.id = #id#
+	</update>
+	
+		<!-- 删除选中的人员角色关系 -->
+	<delete id="delUserOfRole" parameterClass="Integer">
+		delete from ccs.usersroles ur where ur.userid = #userid#
+	</delete>
+	
+		<!-- 删除选中的人员机构关系-->
+	<delete id="delUserOfOrg" parameterClass="Integer">
+		delete from ccs.orgusers ou where ou.userid = #userid#
+	</delete>
+	
+		<!-- 删除选中的人员机构关系-->
+	<delete id="deleteUsersPositions" parameterClass="Integer">
+		delete from ccs.userspositions up where up.userid = #userid#
+	</delete>
+	
+	
+	 <!-- 查询用户  -->
+	<select id="getOrgDetail" parameterClass="java.util.Map" resultClass="Org">
+		select * from ccs.organization o where o.id = #id# and o.status > 0  
+	</select>
+	
+	<select id="getUseridBySeq" parameterClass="Integer"  resultClass="Integer">
+		select ccs.sequserid.nextval from dual
+	</select>
+	
+	<select id="getRoleidBySeq" parameterClass="Integer"  resultClass="Integer">
+		select ccs.seqroleid.nextval from dual
+	</select>
+	
+		<!-- 根据人员id查询该人员拥有的角色 -->
+	<select id="getRoleByUserid" parameterClass="Integer"  resultClass="role">
+		 select r.* from ccs.roles r inner join ccs.usersroles ur on ur.roleid = r.id
+			inner join ccs.users u on u.id = ur.userid where u.id = #userid# and ur.status > 0 and r.status >0
+	</select>
+	
+	<select id="queryOrgUser" parameterClass="Map" resultMap="SysNodes">
+		<![CDATA[select ou.id id ,ou.orgid nodeid from ccs.orgusers ou  where userid = #userid# and ou.status > 0]]>
+	</select>
+	
+	<!-- 权限树构造 -->
+	<select id="sysReTreeRole1" parameterClass="java.util.Map" resultMap="treeMap">
+		<![CDATA[	
+				select distinct t.id      attributes,
+                t.sysname text,
+                t.id      children,
+                t.sortno  sortno
+  from ccs.logisystem       t,
+       ccs.rolespermissions rp,
+       ccs.roles            r,
+       ccs.permissions      p
+ where p.nodeid = t.id
+   and t.status > 0
+   and p.id = rp.permissionid
+   and rp.roleid = r.id
+   and r.id in (#roleid#)
+union all
+(select distinct t.id      attributes,
+                t.modname text,
+                t.id      children,
+                m.sortno  sortno
+  from mods                 t,
+       sysmod               m,
+       ccs.rolespermissions rp,
+       ccs.roles            r,
+       ccs.permissions      p
+ where t.id = m.modid
+ and p.nodeid = t.id
+   and t.status > 0
+   and p.id = rp.permissionid
+  and rp.roleid = r.id
+   and r.id in (#roleid#)
+ )
+union all
+(select distinct t.id       attributes,
+                t.funcname text,
+                t.id       children,
+                m.sortno   sortno
+  from modfuncs             m,
+       funcs                t,
+       ccs.rolespermissions rp,
+       ccs.roles            r,
+       ccs.permissions      p
+ where t.id = m.funcid
+   and t.status > 0
+   and p.id = rp.permissionid
+   and rp.roleid = r.id
+   and r.id in (#roleid#)
+)
+union all
+(select distinct t.id attributes, t.opsname text,  t.id  children,m.sortno
+  from funcsops             m,
+       ops                  t,
+       ccs.rolespermissions rp,
+       ccs.roles            r,
+       ccs.permissions      p
+ where t.id = m.opsid
+   and t.status > 0
+   and p.id = rp.permissionid
+   and rp.roleid = r.id
+   and r.id in (#roleid#)
+ )
+ 
+			]]>
+	</select>
+	
+	<select id="sysReTreeRole" parameterClass="java.util.Map" resultMap="nodeSys">
+		<![CDATA[	
+				select distinct t.id ATTRIBUTE , t.sysname text ,t.id children,t.sortno from ccs.logisystem t,ccs.rolespermissions rp,ccs.roles r,ccs.permissions p 
+     				 where p.nodeid = t.id and t.status > 0 and  p.id = rp.permissionid and rp.roleid = r.id and r.id in (roleid) order by t.sortno
+				]]>
+	</select>
+	
+	<select id="queryModsNode" parameterClass="Integer" resultMap="nodeMods">
+		<![CDATA[	
+					    select distinct t.id      ATTRIBUTE,
+                      					t.modname text,
+                      					t.id      children,
+                      					m.sortno
+				        from mods                 t,
+				             sysmod               m,
+				             ccs.rolespermissions rp,
+				             ccs.roles            r,
+				             ccs.permissions      p
+				       where t.id = m.modid
+				         and p.nodeid = t.id
+				         and m.sysid = #sysid#
+				         and t.status > 0
+				         and p.id = rp.permissionid
+				         and rp.roleid = r.id
+				         and r.id in (#roleid#)
+				       order by m.sortno
+				]]>
+	</select>
+	<select id="queryFunsNode" parameterClass="Integer" resultMap="nodeFuns">
+		<![CDATA[	 
+				select distinct t.id       ATTRIBUTE,
+	                      		t.funcname text,
+	                      		t.id       children,
+	                      		m.sortno
+				        from modfuncs             m,
+				             funcs                t,
+				             ccs.rolespermissions rp,
+				             ccs.roles            r,
+				             ccs.permissions      p
+				       where t.id = m.funcid
+				         and m.modid = #modid#
+				         and t.status > 0
+				         and p.id = rp.permissionid
+				         and rp.roleid = r.id
+				         and r.id in (#roleid#)
+				       order by m.sortno
+				]]>
+	</select>
+	<select id="queryOpsNode" parameterClass="Integer" resultMap="nodeOps">
+		<![CDATA[	 
+				select distinct t.id ATTRIBUTE, t.opsname text, m.sortno
+			         from funcsops             m,
+			              ops                  t,
+			              ccs.rolespermissions rp,
+			              ccs.roles            r,
+			              ccs.permissions      p
+			        where t.id = m.opsid
+			          and m.funcid = #funcid#
+			          and t.status > 0
+			          and p.id = rp.permissionid
+			          and rp.roleid = r.id
+			          and r.id in (#roleid#)
+			        order by m.sortno
+				]]>
+	</select>
+	
+	<select id="getSysAttributesNode" parameterClass="Integer" resultClass="java.util.HashMap">
+	<![CDATA[ select id from  LOGISYSTEM where id = #value# ]]>
+	</select>
+	<select id="getModsAttributesNode" parameterClass="Integer" resultClass="java.util.HashMap">
+	<![CDATA[  select id from  MODS where id = #value# ]]>
+	</select>
+	<select id="getFunsAttributesNode" parameterClass="Integer" resultClass="java.util.HashMap" >
+	<![CDATA[   select id from  funcs where id = #value# ]]>
+	</select>
+	<select id="getOpsAttributesNode" parameterClass="Integer" resultClass="java.util.HashMap">
+	<![CDATA[   select id from  ops where id = #value# ]]>
+	</select>
+	
+	<select id="queryLogisystem" parameterClass="java.util.Map" resultClass="LogiSystem">
+    <![CDATA[  
+        select distinct t.id, t.sysname,t.id children,t.sortno from ccs.logisystem t,ccs.rolespermissions rp,ccs.roles r,ccs.permissions p 
+              where p.nodeid = t.id and t.status > 0 and  p.id = rp.permissionid and rp.roleid = r.id and r.id in (#roleid#) order by t.sortno
+        ]]>
+  </select>
+  
+  <select id="queryMods" parameterClass="java.util.Map" resultClass="model">
+    <![CDATA[  
+              select distinct t.id ,
+                                t.modname,
+                                m.sortno
+                from mods                 t,
+                     sysmod               m,
+                     ccs.rolespermissions rp,
+                     ccs.roles            r,
+                     ccs.permissions      p
+               where t.id = m.modid
+                 and p.nodeid = t.id
+                 and m.sysid = #sysid#
+                 and t.status > 0
+                 and p.id = rp.permissionid
+                 and rp.roleid = r.id
+                 and r.id in (#roleid#)
+               order by m.sortno
+        ]]>
+  </select>
+  <select id="queryFunc" parameterClass="java.util.Map" resultClass="func">
+    <![CDATA[   
+        select distinct t.id,
+                            t.funcname,
+                            t.id ,
+                            m.sortno
+                from modfuncs             m,
+                     funcs                t,
+                     ccs.rolespermissions rp,
+                     ccs.roles            r,
+                     ccs.permissions      p
+               where t.id = m.funcid
+                 and m.modid = #modid#
+                 and t.status > 0
+                 and p.id = rp.permissionid
+                 and rp.roleid = r.id
+                 and r.id in (#roleid#)
+               order by m.sortno
+        ]]>
+  </select>
+  <select id="queryOps" parameterClass="java.util.Map" resultClass="ops">
+    <![CDATA[   
+        select distinct t.id , t.opsname , m.sortno
+               from funcsops             m,
+                    ops                  t,
+                    ccs.rolespermissions rp,
+                    ccs.roles            r,
+                    ccs.permissions      p
+              where t.id = m.opsid
+                and m.funcid = #funcid#
+                and t.status > 0
+                and p.id = rp.permissionid
+                and rp.roleid = r.id
+                and r.id in (#roleid#)
+              order by m.sortno
+        ]]>
+  </select>
+  
+  	<select id="queryRolePermission1" parameterClass="Map" resultMap="SysNodes">
+		select p.id id,  p.nodeid nodeid from PERMISSIONS p 
+		where exists (select 1 from rolespermissions r where r.roleid in ($roleId$) and r.PERMISSIONID = p.id and r.status = #status#)
+	</select>
+	
+	<select id="getUserPostion"  parameterClass="Map" resultClass="position">
+		<![CDATA[ select * from ccs.position  p  where p.status > 0 and  p.orgid = #orgid#]]>	
+  	</select>
+  	
+  	<!-- 根据userid获取user的职位 -->
+  	<select id="getUserPostionByUId" resultClass="Integer" parameterClass="Integer">
+  		select t.positionid from ccs.userspositions t where t.userid = #userid#
+  	</select>
+  	
+  	<update id="updateUserPostionByUid">
+  		update ccs.userspositions up set up.positionid = #positionid# where up.userid = #userid#
+  	</update>
+  	
+  	<select id="loginidIsExsit"  parameterClass="java.lang.String"  resultClass="Integer">
+   		select count (*) from ccs.users  where loginid = #loginid# 
+  	</select>
+  	
+  	<select id="getUserOrgid"  parameterClass="Integer"  resultClass="Integer">
+   		select ou.orgid from ccs.orgusers ou  where userid = #userid# and ou.status > 0
+  	</select>
+  	
+  	<select id="getOrgNameByUserid" resultClass="string">
+  		  select o.orgname from ccs.organization o where o.id = (select ou.orgid from ccs.orgusers ou where ou.userid = #userid#)
+  	</select>
+
+	<!--通过组织机构ID查询这个机构下的所有用户，包括下级机构的用户-->
+	<select id="getUsersByOrgId" parameterClass="int" resultClass="java.util.HashMap">
+
+		select u.id,u.loginid,u.USERNAME
+		from ccs.users u
+		where exists
+		(select ou.userid
+		 from ccs.orgusers ou
+		 where ou.userid = u.id
+			   and exists (select 1
+						   from ccs.organization t
+						   where t.id = ou.orgid
+						   start with t.id = #orgId#
+						   connect by prior t.id = t.parentid))
+	</select>
+</sqlMap>

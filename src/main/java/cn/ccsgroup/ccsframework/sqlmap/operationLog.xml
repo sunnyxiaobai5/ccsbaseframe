@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="OpeLog">
+
+	<insert id="insertLog" parameterClass="log">
+		insert into ccs.syslogs (id,loginid,regioncode,orgid,opemod,opefunc,opeparam,opedate,ip,flag,sysid,sysinsttime,status,type) 
+		values(ccs.SEQSYSLOGSID.NEXTVAL , #loginId#,#regionCode#,#orgId#,#opeMod#,#opeFunc#,#opeParam#,to_date(#opeDate#, 'yyyy/mm/dd hh24:mi:ss'),#ip#,#flag#,#sysId#, SYSDATE ,#status#,#type#)
+		<selectKey resultClass="int" keyProperty="id" >
+		      SELECT ccs.SEQSYSLOGSID.CURRVAL FROM DUAL
+		</selectKey> 
+	</insert>
+
+</sqlMap>

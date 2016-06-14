@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Report">
+
+	<typeAlias alias="ReportSet" type="cn.ccsgroup.ccsframework.entity.ReportSet"/>
+    <typeAlias alias="UserPrintSet" type="cn.ccsgroup.ccsframework.entity.UserPrintSet"/>
+    <typeAlias alias="ReportSetPara" type="cn.ccsgroup.ccsframework.entity.ReportSetPara"/>
+
+    <!-- query reportSet by id -->
+    <select id="queryReportSetById" parameterClass="int" resultClass="ReportSet">
+        select * from ccs.reportSet t where t.id = #id# and t.status = 1
+    </select>
+
+    <!-- count报表 -->
+    <select id="reportSetListCount" parameterClass="map" resultClass="int">
+        select count(1) from ccs.reportset t where t.status = 1
+        <dynamic>
+            <isNotEmpty prepend="and" property="rtype">
+                t.rtype = #rtype#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="rname">
+                t.rname like '%'||#rname#||'%'
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="rabb">
+                t.rabb = #rabb#
+            </isNotEmpty>
+        </dynamic>
+    </select>
+
+    <!-- 查询报表列表 -->
+    <select id="reportSetList" parameterClass="map" resultClass="ReportSet">
+        SELECT * FROM (select a.*,ROWNUM RN  from (
+          select t.*,(select sys.sysname from ccs.logisystem sys where sys.id = t.rabb ) as sysname from ccs.reportset t where t.status = 1
+        <dynamic>
+            <isNotEmpty prepend="and" property="rtype">
+                t.rtype = #rtype#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="rname">
+                t.rname like '%'||#rname#||'%'
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="rabb">
+                t.rabb = #rabb#
+            </isNotEmpty>
+        </dynamic>
+        ) a
+        <dynamic>
+            <isNotEmpty prepend="where" property="end">
+                ROWNUM &lt;= #end#
+            </isNotEmpty>
+        </dynamic>
+        )
+        <dynamic>
+            <isNotEmpty prepend="where" property="begin">
+                RN &gt;= #begin#
+            </isNotEmpty>
+        </dynamic>
+    </select>
+
+    <!--新增报表-->
+    <insert id="saveReportSet" parameterClass="ReportSet">
+      <selectKey resultClass="int" keyProperty="id">
+          select ccs.seqreportset.nextval from dual
+      </selectKey>
+       insert into ccs.reportset (ID, RTYPE, RNAME, RFILE, RFILEURL, RPARAM, RABB, REGIONCODE, ISBATCH, DESCRIPTION, RPOSITION, STATUS, SYSINSTTIME)
+        values (#id#, #rtype#, #rname#, #rfile#, #rfileurl#, #rparam#, #rabb#, #regionCode#, #isbatch#, #description#, #rposition#, 1, sysdate)
+    </insert>
+
+    <!-- 更新报表 -->
+    <update id="updateReportSet" parameterClass="ReportSet">
+        update ccs.reportset set rtype = #rtype#,rname=#rname#,rfile=#rfile#,rfileurl=#rfileurl#,rparam=#rparam#,rabb=#rabb#,isbatch=#isbatch#,description=#description#,rposition=#rposition#,
+        sysEditTime=sysdate where id = #id#
+    </update>
+
+    <!-- 删除报表 -->
+    <update id="deleteReportSet" parameterClass="ReportSet">
+        update ccs.reportset set status = -1,sysdeltime=sysdate where id = #id#
+    </update>
+
+    <!-- 查询报表列表 -->
+    <select id="userPrintSetList" parameterClass="map" resultClass="java.util.HashMap">
+        SELECT * FROM (select a.*,ROWNUM RN  from (
+        select t.rtype,t.rname,(select sys.sysname from ccs.logisystem sys where sys.id = t.rabb ) as sysname,ups.ispreview,ups.printer,ups.id,ups.reportid,t.rfileurl  from ccs.reportset t right join ccs.userPrintSet ups on t.id = ups.reportid where 1=1
+        <dynamic>
+            <isNotEmpty prepend="and" property="rtype">
+                t.rtype = #rtype#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="rname">
+                t.rname like '%'||#rname#||'%'
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="rabb">
+                t.rabb = #rabb#
+            </isNotEmpty>
+            <!--<isNotEmpty prepend="or" property="isPresent">
+                t.rabb is null
+            </isNotEmpty>-->
+            <isNotEmpty prepend="and" property="userid">
+                ups.userid = #userid#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="report">
+                t.rname = #report#
+            </isNotEmpty>
+        </dynamic>
+        order by ups.printindex
+        ) a
+        <dynamic>
+            <isNotEmpty prepend="where" property="end">
+                ROWNUM &lt;= #end#
+            </isNotEmpty>
+        </dynamic>
+        )
+        <dynamic>
+            <isNotEmpty prepend="where" property="begin">
+                RN &gt;= #begin#
+            </isNotEmpty>
+        </dynamic>
+    </select>
+
+    <!-- count报表 -->
+    <select id="userPrintSetListCount" parameterClass="map" resultClass="int">
+        select count(1) from ccs.reportset t right join ccs.userPrintSet ups on t.id = ups.reportid where 1=1
+        <dynamic>
+            <isNotEmpty prepend="and" property="rtype">
+                t.rtype = #rtype#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="rname">
+                t.rname like '%'||#rname#||'%'
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="rabb">
+                t.rabb = #rabb#
+            </isNotEmpty>
+            <isNotEmpty prepend="or" property="isPresent">
+                t.rabb is null
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="userid">
+                ups.userid = #userid#
+            </isNotEmpty>
+        </dynamic>
+    </select>
+
+    <!-- 导入用户对应系统报表 -->
+    <insert id="saveUserPrintSet" parameterClass="UserPrintSet">
+        <selectKey resultClass="int" keyProperty="id">
+            select ccs.sequserprintsetid.nextval from dual
+        </selectKey>
+        insert into ccs.userprintset(ID, REPORTID, USERID, ISPREVIEW, PRINTINDEX, SYSINSTTIME, PRINTER) values
+        (#id#,#reportId#,#userId#,#isPreview#,#printIndex#,sysdate,#printer#)
+    </insert>
+
+    <!-- 通过id查询用户配置 -->
+    <select id="queryUserPrintSetById" parameterClass="int" resultClass="java.util.HashMap">
+        select t.rtype,t.rname,(select sys.sysname from ccs.logisystem sys where sys.id = t.rabb ) as sysname,ups.ispreview,ups.printer,ups.id from ccs.reportset t
+        right join ccs.userPrintSet ups on t.id = ups.reportid  where ups.id = #id#
+    </select>
+
+    <!--更新用户设置-->
+    <update id="updateUserPrintSet" parameterClass="UserPrintSet">
+        update ccs.userPrintSet t set t.ispreview = #isPreview# ,t.printer = #printer# where t.id = #id#
+    </update>
+
+    <!--删除用户设置-->
+    <delete id="deleteUserPrintSet" parameterClass="map">
+        delete from ccs.userPrintSet t where t.id = #ID#
+    </delete>
+
+    <!-- 查询报表参数 -->
+    <select id="reportSetParaList" parameterClass="map" resultClass="ReportSetPara">
+        SELECT * FROM (select a.*,ROWNUM RN  from (
+          select t.* from ccs.reportset_para t where 1=1
+          <dynamic>
+              <isNotEmpty prepend="and" property="reportId">
+                  t.reportid = #reportId#
+              </isNotEmpty>
+          </dynamic>
+
+        ) a
+        <dynamic>
+            <isNotEmpty prepend="where" property="end">
+                ROWNUM &lt;= #end#
+            </isNotEmpty>
+        </dynamic>
+        )
+        <dynamic>
+            <isNotEmpty prepend="where" property="begin">
+                RN &gt;= #begin#
+            </isNotEmpty>
+        </dynamic>
+    </select>
+
+    <!-- 报表参数分页 -->
+    <select id="reportSetParaListCount" parameterClass="map" resultClass="int">
+        select count(1) from ccs.reportset_para t where 1=1
+        <dynamic>
+            <isNotEmpty prepend="and" property="reportId">
+                t.reportid = #reportId#
+            </isNotEmpty>
+        </dynamic>
+    </select>
+
+    <!-- 保存报表参数 -->
+    <insert id="saveReportSetPara" parameterClass="ReportSetPara">
+        <selectKey keyProperty="id" resultClass="int">
+            select ccs.seqreportsetparaid.nextval from dual
+        </selectKey>
+        insert into ccs.reportset_para(id,reportId,name,paraname,sysinsttime) values (#id#,#reportId#,#name#,#paraName#,sysdate)
+    </insert>
+
+    <!-- 通过id查询报表参数 -->
+    <select id="queryReportSetParaById" parameterClass="int" resultClass="ReportSetPara">
+        select * from ccs.reportset_para where id = #id#
+    </select>
+
+    <!--编辑参数-->
+    <update id="updateReportSetPara" parameterClass="ReportSetPara">
+        update ccs.reportset_para t set t.name=#name#,t.paraname=#paraName# where t.id = #id#
+    </update>
+
+    <!--删除参数-->
+    <delete id="deleteReportSetPara" parameterClass="int">
+        delete from ccs.reportset_para t where t.id = #id#
+    </delete>
+
+    <!--删除参数-->
+    <delete id="deleteReportSetParaByReport" parameterClass="ReportSet">
+        delete from ccs.reportset_para t where t.reportid = #id#
+    </delete>
+
+    <!---通过名称查询报表-->
+    <select id="queryReportSet" resultClass="ReportSet" parameterClass="map">
+        select * from ccs.reportset t where t.rname = #rname#
+        <dynamic>
+            <isNotEmpty prepend="and" property="notid">
+               t.id != #notid#
+            </isNotEmpty>
+            <isNotEmpty prepend="and" property="status">
+                t.status = #status#
+            </isNotEmpty>
+        </dynamic>
+    </select>
+</sqlMap>

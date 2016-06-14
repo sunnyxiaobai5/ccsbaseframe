@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="buildjar" default="compile">
+
+    <property name="build.classes.dir" location="D:\build\classes"></property>
+    <property name="dist.dir" location="D:\dist"></property>
+    <property name="project.classes.dir" location="D:\GitProjects\CCSBaseFrame\target\CCSBaseFrame\WEB-INF\classes"></property>
+
+    <target name="compile">
+        <delete dir="${build.classes.dir}"></delete>
+
+        <mkdir dir="${build.classes.dir}\cn\ccsgroup\ccsframework"/>
+        <mkdir dir="${dist.dir}"/>
+
+        <copy todir="${build.classes.dir}\cn\ccsgroup\ccsframework">
+            <fileset dir="${project.classes.dir}\cn\ccsgroup\ccsframework">
+                <include name="sqlmap/operationLog.xml" />
+                <include name="utils/*.class"/>
+                <include name="exception/*.class"/>
+                <include name="operationLog/**/*.class"/>
+                <include name="httpService/SSOAuthHttpClient*.class"/>
+                <include name="httpService/HttpClientResultBean.class"/>
+                <include name="httpService/CCSHttpClient.class"/>
+                <include name="httpService/HttpRequestBody.class"/>
+                <include name="httpService/HttpResponseBody.class"/>
+                <include name="interceptor/*.class"/>
+                <include name="entity/OperationLog.class"/>
+                <include name="components/*.class"/>
+                <include name="annotation/*.class"/>
+                <include name="base/**/*.class"/>
+            </fileset>
+        </copy>
+
+        <jar destfile="${dist.dir}\ccs-core-1.1.2.jar" basedir="${build.classes.dir}"></jar>
+
+    </target>
+
+</project>

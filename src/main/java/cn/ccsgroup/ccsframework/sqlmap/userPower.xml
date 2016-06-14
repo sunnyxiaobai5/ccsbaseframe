@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="UserPower">
+	<resultMap class="java.util.HashMap" id="userModel">
+		<result property="modId" column="MODID"/>
+		<result property="modName" column="MODNAME"/>
+		<result property="funcId" column="FUNCID"/>
+		<result property="funcName" column="FUNCNAME"/>
+		<result property="funcUrl" column="FUNCURL"/>
+		<result property="sortNo" column="SORTNO"/>
+	</resultMap>
+	
+	<resultMap class="cn.ccsgroup.ccsframework.entity.Model" id="userModel_2">
+		<result property="id" column="MODID"/>
+		<result property="modName" column="MODNAME"/>
+	</resultMap>
+	
+	<resultMap class="role" id="roleMap">
+  		<result property="id" column="ID"/>
+  		<result property="remark" column="REMARK"/>
+  		<result property="regionCode" column="REGIONCODE"/>
+  		<result property="rName" column="RNAME"/>
+  	</resultMap>
+	
+	<select id="getSysPower" resultClass="logiSystem">
+		<![CDATA[
+			select * from ccs.logisystem l where l.id in (200)
+		]]>
+	</select>
+	
+	<select id="getUserMods" resultMap="userModel" parameterClass="java.util.Map">
+		<![CDATA[
+			select m.id modId,m.modName,f.id funcId,f.funcName,f.funcUrl,sm.sortno from ccs.logisystem l
+			inner join ccs.sysmod sm on sm.sysid = l.id
+			inner join ccs.mods m on m.id = sm.modid
+			inner join ccs.modfuncs mf on mf.modid = m.id
+			inner join ccs.funcs f on f.id = mf.funcid
+			where l.briefname = #briefName# order by sm.sortno
+		]]>
+	</select>
+	
+	<select id="queryUser" parameterClass="UserManager" resultClass="UserManager">
+		<![CDATA[ select * from ccs.users u where u.status = #status# and u.loginid=#loginid# ]]>
+	</select>
+	
+	<select id="queryUserRole" parameterClass="Integer" resultClass="role">
+		<![CDATA[ select r.* from ccs.roles r where exists (
+		select 1 from ccs.USERSROLES u where u.userid =#value# and r.id = u.roleid and u.status = 1) ]]>
+	</select>
+	
+	<!-- l根据登录的id(前提登录成功)返回该用户的角色列表  用 -->
+  	<select id="findRolesByLoginId" resultMap="roleMap">
+  		select * from ccs.roles r,ccs.usersroles ur,ccs.users u 
+       		where r.id = ur.roleid and ur.userid = u.id and u.loginid = #loginId#
+  	</select>
+  	
+  	<select id="findAllRoles" resultMap="roleMap">
+  		<![CDATA[ select * from (
+			select rownum r ,m.* from (
+				select * from ccs.roles t where t.status > 0) m  
+			where rownum <= #end# ) 
+		where r > #begin# ]]>
+  	</select>
+  	
+  	<!-- 根据所有角色的总条数 -->
+	<select id="findAllRolesCount" parameterClass="java.util.Map"  resultClass="Integer">
+		<![CDATA[select count(*) from ccs.roles t where t.status > 0 ]]>
+	</select>
+	
+	<select id="queryUserRegionCode" parameterClass="Integer" resultClass="String">
+	<![CDATA[select distinct o.regioncode from ccs.organization o where exists
+	 (select 1 from ccs.orgusers t where t.orgid = o.id and t.userid = #value# and t.status =1 ) ]]>
+	</select>
+	<select id="queryRoleMods" parameterClass="Map" resultMap="userModel_2">
+	<![CDATA[ select distinct t.nodeid MODID,  (select modname from ccs.mods where id = t.nodeid) modName,
+		(select s.sortno from ccs.sysmod s where s.modid = t.nodeid AND S.SYSID = #sysId#) sortno,
+                t.nodeid FUNC  from ccs.permissions t INNER JOIN ccs.mods m ON t.Nodeid = m.ID AND m.status>0 where exists (select 1
+          from ccs.rolespermissions r
+         where r.roleid in ]]>
+         <iterate property="sessionBean.roleId"  open="(" close=")" conjunction=",">
+        	  $sessionBean.roleId[]$
+        </iterate>
+           <![CDATA[and r.permissionid = t.id and r.status = 1) and t.parentid in (select t.id
+                        from ccs.permissions t   where exists (select 1 from ccs.rolespermissions r where r.roleid in  ]]>
+         <iterate property="sessionBean.roleId"  open="(" close=")" conjunction=",">
+        	  $sessionBean.roleId[]$
+        </iterate>
+           <![CDATA[ and r.permissionid = t.id and r.status = 1)  and t.nodeid = #sysId#) order by sortno asc ]]>
+	</select>
+	<!-- 
+	<select id="queryModFunc" parameterClass="Integer" resultClass="Func">
+		<![CDATA[ select * from funcs t1 where  exists (select 1 from MODFUNCS t2  where t2.modid = #value# and t1.id = t2.funcid )]]>
+	</select> -->
+	
+	<select id="queryModFunc" parameterClass="Map" resultClass="Func">
+		<![CDATA[select distinct f.id PERID, f.*,(select m.sortno from ccs.modfuncs m where m.funcid = f.id and m.sysid=#sysId# and m.modid = #modId#) sortno  from ccs.funcs f where
+		exists (select t.nodeid  from ccs.permissions t where exists (select 1
+          from ccs.rolespermissions r
+         where r.roleid in ]]>
+         <iterate property="sessionBean.roleId"  open="(" close=")" conjunction=",">
+	        	  $sessionBean.roleId[]$
+	        </iterate>
+           <![CDATA[and r.permissionid = t.id and r.status = 1) and t.parentid in (select t.id
+                        from ccs.permissions t   where exists (select 1 from ccs.rolespermissions r where r.roleid in  ]]>
+         <iterate property="sessionBean.roleId"  open="(" close=")" conjunction=",">
+	        	  $sessionBean.roleId[]$
+	        </iterate>
+           <![CDATA[ and r.permissionid = t.id and r.status = 1)  and t.nodeid = #modId#)  and f.id = t.nodeid ) AND f.status>0 order by sortno]]>
+	</select>
+	
+	<select id="queryRoleSys" parameterClass="sessionBean"  resultClass="logiSystem">
+		<![CDATA[
+			select * from ccs.logisystem t1 where exists (
+			select 1 from ccs.PERMISSIONS t2 where exists(select 1 from  ccs.rolespermissions t3  where t3.roleid in]]>
+ 		<iterate property="roleId" open="(" close=")" conjunction=",">
+        	  $roleId[]$
+        </iterate> 
+		<![CDATA[ and t3.permissionid = t2.id  and t3.status = 1 ) and t2.nodelevel = 0 and t2.nodeid = t1.id ) 
+		]]>
+	</select>
+	
+	<select id="queryUserOrganization" parameterClass="Integer" resultClass="dict">
+		<![CDATA[ select distinct t1.orgcode dm, t1.orgname mc
+					  from ccs.organization t1 	 where exists (select 1 from ccs.ORGUSERS t2
+					         where t1.id = t2.orgid  and t2.userid =#value# and t2.status > 0) and t1.status > 0 ]]>
+	</select>
+	
+	<select id="queryUserSystem"  resultClass="dict">
+		<![CDATA[ select distinct t1.id dm , t1.sysname mc from ccs.logisystem t1 where exists (
+					select * from ccs.permissions t2 where exists (	select 1 from ccs.ROLESPERMISSIONS t3 where t3.roleid in ]]>
+							<iterate  open="(" close=")" conjunction=",">
+					        	 #[]#
+					        </iterate>  
+	<![CDATA[and t3.permissionid = t2.id and t3.status =1) and t2.status = 1 and t2.nodelevel = 0 and t1.id = t2.nodeid ) ]]>
+	</select>
+	
+	<select id="queryUserPosition" parameterClass="Integer" resultClass="dict">
+		<![CDATA[ select t.pno dm , t.pname mc from ccs.POSITION t where exists (select 1 from ccs.userspositions t1 where t1.userid = #value# and t1.positionid = t.id and t1.status = 1)  ]]>
+	</select>
+	
+	<select id="querySystem" parameterClass="Integer" resultClass="dict">
+	<![CDATA[ select t1.id dm , t1.sysname mc from ccs.logisystem t1 where id = #value#]]>
+	</select>
+	
+	<select id="checkUser" resultClass="UserManager">
+		select * from ccs.users u where u.loginid = #loginId# and u.status = 1 and u.password = #Pwd#
+	</select>
+	
+	<!-- 改密码  -->
+	<update id="updateUserPwd">
+		update users u set u.password = #newpassword# where u.id = #userId#
+	</update>
+	
+	<select id="queryRegionNameByCode" resultClass="string">
+		select REGIONNAME from ccs.REGIONCODE r where r.REGIONCODE = #value#
+	</select>
+
+</sqlMap>

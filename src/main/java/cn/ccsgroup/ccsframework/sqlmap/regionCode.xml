@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="RegionManage">	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="RegionMap">
+		<result property="text" column="TEXT"/>
+		<result property="children" column="CHILDREN" select="RegionManage.getChildren"/>
+		<result property="attributes" column="ATID" select="RegionManage.getAttributes"/>
+		<result property="iconCls" column="iconCls"/>
+	</resultMap>
+	
+	<parameterMap class="cn.ccsgroup.ccsframework.entity.RegionCode" id="regionManageMap">
+		<parameter property="id"/>
+	</parameterMap>
+	<!-- 插入区域数据	-->
+	<insert id="insertRegionCode" parameterClass="regionCode">
+		insert into ccs.regioncode(ID,REGIONCODE,REGIONNAME,REGIONPID,REGIONABB,RETRIEVALA,RETRIEVALB,sysinsttime,STATUS)
+			values(ccs.seqregioncodeid.nextval,#regionCode#,#regionName#,#regionPId#,#regionAbb#,#retrievalA#,#retrievalB#,sysdate,#status#)
+	</insert>
+	
+<!-- 获取某个id的区域	-->
+	<select id="getRegionCode" parameterClass="java.util.Map" resultClass="regionCode">
+		select * from ccs.regionCode o where o.id = #id#
+	</select>
+	
+	<!-- 获取某个regioncode的区域	-->
+	<select id="findRegionCode" parameterClass="java.util.Map" resultClass="regionCode">
+		select * from ccs.regionCode o where o.regionCode = #regionCode# and o.status > 0
+		<isNotNull property="id">
+			<isNotEmpty prepend="and" property="id">
+				<![CDATA[ id != #id# ]]>
+	  		</isNotEmpty>
+		</isNotNull>
+	</select>
+	
+	<!-- 获取所有有效的区域 -->
+	<select id="getAllRegionCode" parameterClass="java.util.Map"  resultMap="RegionMap">
+ 		select o.id ,o.regioncode children,o.regionname text,'icon-region' iconCls,o.regionpid,o.regionabb,o.sysedittime,o.sysdeltime,o.status,o.id atId from ccs.regionCode o  where o.regioncode=#regionPId# and o.status > 0
+<!-- 		select o.id ,o.regioncode children,o.regionname text,o.regionpid,o.regionabb,o.sysedittime,o.sysdeltime,o.status,o.id atId from ccs.regionCode o  where o.regioncode='510100' and o.status > 0 -->
+		<!-- <isNotNull property="regionpid">
+			<isNotEmpty prepend="and" property="regionpid">
+				<![CDATA[ regionpid = #regionpid# ]]>
+	  		</isNotEmpty>
+		</isNotNull>
+		<isNotNull property="status">
+			<isNotEmpty prepend="and" property="status">
+				<![CDATA[ status = #status#]]>
+			</isNotEmpty>
+		</isNotNull> -->
+	</select>
+		<select id="getChildren" parameterClass="Integer" resultMap="RegionMap">
+		<![CDATA[
+			select o.id ,o.regioncode children,o.regionname text,o.regionpid,'icon-region' iconCls,o.regionabb,o.sysedittime,o.sysdeltime,o.status,o.id atId,o.retrievalA,o.retrievalB,p.regionName parentRegionName from ccs.regionCode o left join ccs.regionCode p  on to_char(o.regionPid)=p.regionCode where o.regionpid = #value# and o.status = 1 and p.status>0
+		]]>
+	</select>
+	
+	<select id="getAttributes" parameterClass="Integer" resultClass="java.util.HashMap">
+		<![CDATA[
+			select o.id ,o.regioncode,o.regionname ,o.regionpid,'icon-region' iconCls,o.regionabb,o.sysedittime,o.sysdeltime,o.retrievalA,o.retrievalB,o.status,p.regionName parentRegionName
+			from ccs.regionCode o left join ccs.regionCode p  on to_char(o.regionPid)=p.regionCode where o.id = #value# and o.status = 1 and p.status>0
+		]]>
+	</select>
+	<!--获取组织机构树结束 -->
+	
+<!--	#and o.regionName not like '%ROOT%'-->
+	<!-- 获取所有子节点 -->
+	<select id="getAllSubRegionCode" parameterClass="java.util.Map"  resultClass="regionCode">
+		select * from ccs.regionCode o where o.status > 0 and o.regionPId=#regionPId#
+	</select>
+	
+	<!-- 更新单个子节点区域 -->
+	<update id="updateRegionCode"  parameterClass="RegionCode">
+		<![CDATA[ update ccs.RegionCode ]]>
+			<dynamic prepend="set">
+				<isNotEmpty prepend="," property="regionCode">
+				 <![CDATA[ regionCode=#regionCode#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="regionName">
+				 <![CDATA[ regionName=#regionName#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="regionPId">
+				 <![CDATA[ regionPId=#regionPId#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="regionAbb">
+				 <![CDATA[ regionAbb=#regionAbb#]]>
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="retrievalA">
+				 <![CDATA[ retrievalA=#retrievalA#]]>
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="retrievalB">
+				 <![CDATA[ retrievalB=#retrievalB#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="status">
+				 <![CDATA[ status=#status#]]>
+				 </isNotEmpty>
+			</dynamic>
+		<![CDATA[ where id=#id#]]>
+	</update>
+
+<!-- 更新某个节点下所有子节点区域编码 -->
+	<update id="updateSubRegionCode"  parameterClass="regionCode">
+		<![CDATA[ update ccs.RegionCode ]]>
+			<dynamic prepend="set">
+				<isNotEmpty prepend="," property="regionCode">
+				 <![CDATA[ regionCode=#regionCode#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="regionName">
+				 <![CDATA[ regionName=#regionName#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="regionPId">
+				 <![CDATA[ regionPId=#regionPId#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="regionAbb">
+				 <![CDATA[ regionAbb=#regionAbb#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="retrievalA">
+				 <![CDATA[ retrievalA=#retrievalA#]]>
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="retrievalB">
+				 <![CDATA[ retrievalB=#retrievalB#]]>
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="status">
+				 <![CDATA[ status=#status#]]>
+				 </isNotEmpty>
+			</dynamic>
+		<![CDATA[ where regionPId=#regionPId#]]>
+	</update>
+	
+	
+	<!-- 删除区域 -->
+	<update id="deleteRegionCodeById" parameterClass="java.util.Map">
+		update ccs.RegionCode m set m.status = #status#,m.sysdeltime=sysdate where m.id = #id#
+	</update>
+	<!-- 获取当前区域以及下级区域 -->
+	<select id="getCurrentRegionCodeList" parameterClass="java.util.Map" resultClass="regionCode">
+		<![CDATA[
+			 select * from ccs.regioncode r where r.regioncode in (
+			 	 select regioncode from ccs.organization where id = #orgId#)
+ 			 union
+ 			 select * from ccs.regioncode r where r.regionpid in (
+ 			 	 select regioncode from ccs.organization where id = #orgId#)
+		]]>
+	</select>
+	<!-- 获取同级区域 -->
+	<select id="getFatherRegionCodeList" parameterClass="java.util.Map" resultClass="regionCode">
+		<![CDATA[
+ 			 select * from ccs.regioncode r where r.regionpid in ( select 
+			       case when exists (
+			            select 1 from ccs.organization f where f.id = c.parentid
+			       ) then (
+			         select rc.regionpid from ccs.regioncode rc where rc.regioncode = c.regioncode
+			       ) else c.regioncode end regioncode
+			  from ccs.organization c where id = #orgId#)
+		]]>
+	</select>
+	
+</sqlMap>

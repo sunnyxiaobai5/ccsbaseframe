@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="SysLogs">
+
+	<!-- 别名定义 -->
+	<typeAlias alias="SysLogs" type="cn.ccsgroup.ccsframework.entity.SysLogs" />
+	
+	<!-- 查询条件定义 -->
+	<sql id="conditions"> 
+	  <dynamic prepend="where">
+	    <isNotEmpty prepend="and" property = "id">
+	    	l.ID = #id#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "orgname">
+	    	l.orgname like '%$orgname$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "sysname">
+	    	l.sysname like '%$sysname$%'
+	    </isNotEmpty>
+	  	 <isNotEmpty prepend="and" property = "opemod">
+	    	l.opemod like '%$opemod$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "opefunc">
+	    	l.opefunc like '%$opefunc$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "flag">
+	    	l.flag like '%$flag$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "loginid">
+	    	l.loginid like '%$loginid$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "startopedate">
+	    	<![CDATA[ to_char(l.opedate,'yyyy/mm/dd') >= #startopedate# ]]>
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "endopedate">
+	    	<![CDATA[ to_char(l.opedate,'yyyy/mm/dd')<= #endopedate# ]]>
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "regioncode">
+	    	l.regioncode=#regioncode#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "ip">
+	    	l.ip=#ip#
+	    </isNotEmpty>
+	  </dynamic>
+	</sql>
+	
+	<!-- 查询操作 -->
+	<select id="queryLogs" parameterClass="java.util.Map"   resultClass="SysLogs">
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select p.*,(select orgname from ccs.organization o where o.id = p.orgid ) orgname,
+					(select sysname from ccs.logisystem l where l.id = p.sysid) as sysname
+					 from ccs.syslogs p where p.status >0
+				    order by p.id desc
+			) t
+		  where rownum<=#end#
+		) where r > #begin#
+		]]>
+	</select>
+	<!-- 查询操作总条数 -->
+	<select id="queryLogsCounts"  resultClass="Integer">
+		select count(*) from SysLogs p where p.status >0
+	</select>
+	<!-- 通过ID查询日志信息 -->
+	<select id="queryLogsById"  resultClass="SysLogs" parameterClass="Integer">
+		select * from ccs.SYSLOGS where id = #value#
+	</select>
+	
+	<!-- 根据前台传的条件查询list -->
+	<select id="getsyslogsSearch" parameterClass="Map" resultClass="SysLogs">
+	
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+			select * from (
+				select p.*,
+						(select orgname from ccs.organization o where o.id = p.orgid ) orgname,
+						(select sysname from ccs.logisystem l where l.id = p.sysid) as sysname
+				from ccs.syslogs p where p.status >0
+				order by p.id desc
+				) l
+		]]>
+		<include refid="conditions"/>
+		<![CDATA[
+			) t
+		  where rownum<=#EasyUIPage.end#
+		) where r > #EasyUIPage.begin#
+		]]>
+	</select>
+	
+	
+	<!-- 根据前台传的条件查询Count -->
+	<select id="getsyslogsCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from (
+				select p.*,
+						(select orgname from ccs.organization o where o.id = p.orgid ) orgname,
+						(select sysname from ccs.logisystem l where l.id = p.sysid) as sysname
+				from ccs.syslogs p where p.status >0
+				order by p.id desc
+				) l
+		<include refid="conditions"/>
+	</select>
+	
+</sqlMap>

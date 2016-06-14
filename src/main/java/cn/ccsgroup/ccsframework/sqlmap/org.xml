@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Org">
+	
+	<typeAlias alias="Org" type="cn.ccsgroup.ccsframework.entity.Org"/>
+	<typeAlias alias="UserVO" type="cn.ccsgroup.ccsframework.entity.UserManager"/>
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="OrgMap">
+		<result property="text" column="text"/>
+		<result property="children" column="CHILDREN" select="Org.getChildren"/>
+		<result property="attributes" column="ATID" select="Org.getAttributes"/>
+	</resultMap>
+
+ 	<!-- 新增组织机构 -->
+	<insert id="addOrg" parameterClass="Org">
+		<![CDATA[
+			insert into ccs.organization(id,parentid,orgname,orgcode,orgtype,shortname,economictype,patentnumber,registingorgan,registerdate,
+			registerbdate,registeredate,registeraddress,rdate,taxnumber,registerregion,address,postcode,fix,email,website,contact,phone,currencyunit,registermoney,
+			dealscope,registerbank,account,accountnum,legalman,legalmobile,legalphone,legalsex,legalfix,legalownerid,legalemail,regioncode,sysinsttime,createruser,sort,status,isVirtual)
+			values(ccs.seqorganizationid.nextval,#parentId#,#orgName#,#orgCode#,#orgType#,#shortName#,#economicType#,
+			#patentNumber#,#registingOrgan#,#registerDate#,
+			#registerBDate#,#registerEDate#,#registerAddress#,#rDate#,#taxNumber#,#registerRegion#,#address#
+			,#postCode#,#fix#,#email#,#webSite#,#contact#,#phone#,#currencyUnit#,#registerMoney#,
+			#dealScope#,#registerBank#,#account#,#accountNum#,#legalMan#,#legalMobile#,#legalPhone#,#legalSex#,
+			#legalFix#,#legalOwnerId#,#legalEmail#,#regionCode#,sysdate,#createrUser#,#sort#,#status#,#isVirtual#
+			)
+		]]>
+	</insert>
+	
+	<!-- 修改组织机构 -->
+	<update id="updateOrg" parameterClass="Org"  >
+		<![CDATA[ update ccs.organization ]]>
+			<dynamic prepend="set">
+				<isNotEmpty prepend="," property="parentId">
+				 <![CDATA[ parentId=#parentId#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="orgName">
+				 <![CDATA[ orgName=#orgName#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="orgCode">
+				 <![CDATA[ orgCode=#orgCode#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="orgType">
+				 <![CDATA[ orgType=#orgType#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="shortName">
+				 <![CDATA[ shortName=#shortName#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="economicType">
+				 <![CDATA[ economicType=#economicType#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="patentNumber">
+				 <![CDATA[ patentNumber=#patentNumber#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="registingOrgan">
+				 <![CDATA[ registingOrgan=#registingOrgan#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="registerDate">
+				 <![CDATA[ registerDate=#registerDate#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="registerBDate">
+				 <![CDATA[ registerBDate=#registerBDate#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="registerEDate">
+				 <![CDATA[ registerEDate=#registerEDate#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="registerAddress">
+				 <![CDATA[ registerAddress=#registerAddress#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="rDate">
+				 <![CDATA[ rDate=#rDate#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="taxNumber">
+				 <![CDATA[ taxNumber=#taxNumber#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="registerRegion">
+				 <![CDATA[ registerRegion=#registerRegion#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="address">
+				 <![CDATA[ address=#address#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="postCode">
+				 <![CDATA[ postCode=#postCode#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="fix">
+				 <![CDATA[ fix=#fix#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="email">
+				 <![CDATA[ email=#email#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="webSite">
+				 <![CDATA[ webSite=#webSite#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="contact">
+				 <![CDATA[ contact=#contact#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="phone">
+				 <![CDATA[ phone=#phone#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="currencyUnit">
+				 <![CDATA[ currencyUnit=#currencyUnit#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="registerMoney">
+				 <![CDATA[ registerMoney=#registerMoney#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="dealScope">
+				 <![CDATA[ dealScope=#dealScope#]]>	
+				 </isNotEmpty>
+				<isNotEmpty prepend="," property="registerBank">
+				 <![CDATA[ registerBank=#registerBank#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="account">
+				 <![CDATA[ account=#account#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="accountNum">
+				 <![CDATA[ accountNum=#accountNum#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="legalMan">
+				 <![CDATA[ legalMan=#legalMan#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="legalMobile">
+				 <![CDATA[ legalMobile=#legalMobile#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="legalPhone">
+				 <![CDATA[ legalPhone=#legalPhone#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="legalSex">
+				 <![CDATA[ legalSex=#legalSex#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="legalFix">
+				 <![CDATA[ legalFix=#legalFix#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="legalOwnerId">
+				 <![CDATA[ legalOwnerId=#legalOwnerId#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="legalEmail">
+				 <![CDATA[ legalEmail=#legalEmail#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="regionCode">
+				 <![CDATA[ regionCode=#regionCode#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="sort">
+				 <![CDATA[ sort=#sort#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="status">
+				 <![CDATA[ status=#status#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="createrUser">
+				 <![CDATA[ createruser=#createrUser#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="createrId">
+				 <![CDATA[ userId=#createrId#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="sysEditTime">
+				 <![CDATA[ sysedittime=sysdate]]>	
+				 </isNotEmpty>
+			</dynamic>
+		<![CDATA[ where id = #id# ]]>
+	</update>
+	
+	<!-- 查询子组织机构 -->
+	<select id="findAllChildByFid" resultClass="Org" parameterClass="Integer">
+		<![CDATA[
+			select * from ccs.organization where parentId = #value# and status > 0 order by sort asc
+		]]>
+	</select>
+	
+	<!-- 获取当前组织机构 -->
+	<select id="selectOrgById" resultClass="Org" parameterClass="Integer">
+		<![CDATA[
+			select * from ccs.organization where id = #value# and status > 0
+		]]>
+	</select>
+	
+	<!-- 修改组织机构排序(调大) -->
+	<update id="updateSortByKey" parameterClass="java.util.Map">
+		<![CDATA[ 
+			update ccs.organization set sort = sort + 1
+				where sort >= #sort# and parentId = #parentId#
+		]]>
+	</update>
+	
+	<!-- 修改组织机构排序(调小) -->
+	<update id="updateReduceSortByKey" parameterClass="java.util.Map">
+		<![CDATA[ 
+			update ccs.organization set sort = sort - 1
+				where sort <= #sort# and parentId = #parentId#
+		]]>
+	</update>
+	
+	<!--获取组织机构树开始 -->
+	<select id="selectOrgTreeByPid" resultMap="OrgMap" parameterClass="java.util.HashMap">
+		<![CDATA[
+			select id children,orgName text,id atId from ccs.organization
+		]]>
+		<isNotNull property="parentId">
+			<isNotEmpty prepend="where" property="parentId">
+				<![CDATA[ id = #parentId# ]]>
+	  		</isNotEmpty>
+		</isNotNull>
+		<isNotNull property="status">
+			<isNotEmpty prepend="and" property="status">
+				<![CDATA[ status = #status#]]>
+			</isNotEmpty>
+		</isNotNull>
+		<![CDATA[ order by sort asc]]>
+	</select>
+	
+	<select id="getChildren" parameterClass="Integer" resultMap="OrgMap">
+		<![CDATA[
+			select id children,orgName text,id atId from ccs.organization where parentId = #value# and status = 1 order by sort asc
+		]]>
+	</select>
+	
+	<select id="getAttributes" parameterClass="Integer" resultClass="java.util.HashMap">
+		<![CDATA[
+			select c.id,c.orgName,c.orgCode,
+			(select count(*) from ccs.organization children where children.parentid = c.id and status = 1) sort
+			from ccs.organization c where c.id = #value# and status = 1
+		]]>
+	</select>
+	<!--获取组织机构树结束 -->
+	
+	<!-- 删除组织机构 -->
+	<update id="deleteOrgById" parameterClass="java.util.Map">
+		<![CDATA[ update ccs.organization c set c.status = #status#,c.sysdeltime = sysdate where c.id = #orgId# ]]>
+	</update>
+	
+	<!-- 获取组织机构下的用户 -->
+	<select id="selectUserByOrgId" parameterClass="java.util.Map" resultClass="UserVO">
+		<![CDATA[
+			select * from (
+			select u.* from ccs.organization org
+			inner join ccs.orgusers ou on ou.orgid = org.id
+			inner join ccs.users u on u.id= ou.userid where org.id = #orgId# order by u.id) where rownum > #begin# and rownum <= #end#
+		]]>
+	</select>
+	<select id="getRegionNameBycode" parameterClass="String" resultClass="String">
+		select r.regionname from ccs.regioncode r where r.regioncode = #code#
+	</select>
+	<select id="getStreetNameBycode" parameterClass="String" resultClass="String">
+		select s.streetname from ccs.street s where s.streetcode = #code#
+	</select>
+	<select id="getCommunityNameBycode" parameterClass="String" resultClass="String">
+		select c.communityname from ccs.community c where c.communitycode = #code#
+	</select>
+	
+</sqlMap>

@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="LogiSystem">
+
+	<typeAlias alias="logiSystem" type="cn.ccsgroup.ccsframework.entity.LogiSystem" />
+	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="showMap">
+		<result property="text" column="text"/>
+		<result property="attributes" column="MODID" select="Model.getAttributes"/>
+		<result property="children" column="CHILDREN" select="LogiSystem.getChildren"/>
+	</resultMap>
+	
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="showMapByFunc">
+		<result property="text" column="TEXT"/>
+		<result property="attributes" column="FID" select="Func.getAttributes"/>
+	</resultMap>
+	
+	<resultMap id="logiSystemBean" class="logiSystem">
+		<result property="id" column="ID"/>
+		<result property="sysName" column="SYSNAME"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="sysUrl" column="SYSURL"/>
+		<result property="sortNo" column="SORTNO"/>
+		<result property="isActive" column="ISACTIVE"/>
+		<result property="regionCode" column="REGIONCODE"/>
+		<result property="briefName" column="BRIEFNAME"/>
+		<result property="sysIcon" column="SYSICON"/>
+		<result property="isInside" column="ISINSIDE"/>
+		<result property="sysinsttime" column="SYSINSTTIME"/>
+		<result property="sysedittime" column="SYSEDITTIME"/>
+		<result property="sysdeltime" column="SYSDELTIME"/>
+		<result property="status" column="STATUS" />
+		<result property="alias" column="ALIAS" />
+	</resultMap>
+	 
+	<!-- 处理BLOB -->
+	<resultMap class="java.util.HashMap" id="tmpBlob">
+		<result property="sysLogo" column="SYSICON" typeHandler="org.springframework.orm.ibatis.support.BlobByteArrayTypeHandler"/>
+	</resultMap>
+	
+	<resultMap id="trees" class="tree">
+		<result property="id" column="ID"/>
+		<result property="tid" column="TID"/>
+		<result property="text" column="TEXT" />
+	</resultMap>
+	
+	<resultMap id="modelsWithChecked" class="model">
+		<result property="id" column="ID"/>
+		<result property="modName" column="MODNAME"/>
+		<result property="isChecked" column="CHECKED" />
+	</resultMap>
+	
+	<resultMap id="funcs" class="func">
+		<result property="id" column="ID"/>
+		<result property="funcName" column="FUNCNAME"/>
+	</resultMap>
+		
+	<!-- 查询条件定义 -->
+	<sql id="conditions"> 
+	  <dynamic prepend="where">
+	 	<isNotEmpty prepend="and">
+	    	ls.status > 0  
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "id">
+	    	ls.ID = #id#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property="sysName">
+			<![CDATA[	 ls.sysName like '%$sysName$%']]>	
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="briefName">
+			<![CDATA[	 ls.briefName like '%$briefName$%']]>	
+		</isNotEmpty>
+		<isNotEmpty prepend="and" property="regionCode">
+			<![CDATA[	 ls.regionCode=#regionCode#]]>	
+		</isNotEmpty>
+	  </dynamic>
+	</sql>	
+		
+   <insert id="insertSys" parameterClass="logiSystem" >
+   		<selectKey keyProperty="id" resultClass="int">
+			select ccs.seqsystemid.nextval from dual
+		</selectKey>
+	   	insert into ccs.logisystem (ID,SYSNAME,DESCRIPTION,SYSURL,SORTNO,ISACTIVE,REGIONCODE,BRIEFNAME,SYSICON,ISINSIDE,SYSINSTTIME,STATUS,ALIAS) 
+	   	values(#id#,#sysName#,#description#,#sysUrl#,#sortNo#,#isActive#,#regionCode#,#briefName#,#sysIcon:BLOB#,#isInside#,sysdate,#status#,#alias#)
+   </insert>
+   
+   <update id="updateSys" parameterClass="logiSystem"  >
+		<![CDATA[ update ccs.logisystem ]]>
+			<dynamic prepend="set">
+				<isNotEmpty prepend="," property="sysName">
+				 <![CDATA[	 sysName=#sysName#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="description">
+				 <![CDATA[	 description=#description#]]>	
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="sysUrl">
+				 <![CDATA[	 sysUrl=#sysUrl#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="sortNo">
+				 <![CDATA[	 sortNo=#sortNo#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="isActive">
+				 <![CDATA[	 isActive=#isActive#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="regionCode">
+				 <![CDATA[	 regionCode=#regionCode#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="briefName">
+				 <![CDATA[	 briefName=#briefName#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="sysIcon">
+				 <![CDATA[	 sysIcon=#sysIcon:BLOB#]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="," property="sysedittime">
+				 <![CDATA[	 sysedittime=sysdate]]>	
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="status">
+				 <![CDATA[	 status=#status#]]>	
+				 </isNotEmpty>
+				  <isNotEmpty prepend="," property="alias">
+				 <![CDATA[	 alias=#alias#]]>	
+				 </isNotEmpty>
+			</dynamic>
+		<![CDATA[ where id=#id#]]>
+	</update>
+	
+	
+	<select id="getAllLogiSystem" parameterClass="java.util.Map" resultMap="logiSystemBean" >
+		<![CDATA[
+			select * from (
+				select rownum r , t.* from (
+					select * from ccs.logisystem where status > 0  order by id ) t 
+				where rownum <= #end# ) 
+			where r > #begin#
+		]]>
+	</select>
+	
+	<select id="queryCount" parameterClass="java.util.Map" resultClass="Integer">
+		<![CDATA[
+			select count(*) from ccs.logisystem where status > 0
+		]]>
+	</select>
+
+	<!-- 模糊查询系统 -->
+	<select id="getlogiSystemBycondition" parameterClass="java.util.Map" resultMap="logiSystemBean">
+		<![CDATA[
+			select * from (
+				select rownum r , t.* from (
+					select * from ccs.logisystem l where 1=1	]]>
+				<isNotEmpty prepend="and" property="sysName">
+				 <![CDATA[	  l.sysName like '%$sysName$%' ]]>	
+				 </isNotEmpty>
+				 <isNotEmpty prepend="and" property="alias">
+				 <![CDATA[	  l.alias = #alias# ]]>	
+				 </isNotEmpty>
+			<![CDATA[		  and  l.status > 0 order by id ) t 
+				where rownum <= #end# ) 
+			where r > #begin#
+		]]>
+	</select>
+	
+		<!-- 查询系统-->
+	<select id="getlogiSystemByID" parameterClass="java.util.Map" resultClass="logiSystem">
+		select * from ccs.logisystem l where l.id = #id# and l.status > 0
+	</select>
+	
+	<!-- 删除系统  -->
+	<update id="deleteSys" parameterClass="java.util.Map">
+		DELETE CCS.LOGISYSTEM WHERE ID = #id#
+	</update>
+	
+	<insert id="insertSysmod" parameterClass="java.util.Map">
+		<selectKey resultClass="int" keyProperty="id" >
+			SELECT seqsysmodid.nextval AS id FROM DUAL
+		</selectKey>
+		<![CDATA[
+		 	Insert Into ccs.sysmod (Id,sysid,modid,sortno,sysinsttime) 
+		          Values (#id#,#sysId#,#modId#,#sortNo#,sysdate)
+		]]>
+   	</insert>
+	
+	
+	<select id="getSysLogo" parameterClass="Integer" resultMap="tmpBlob">
+		<![CDATA[
+			select SYSICON from ccs.logisystem where id = #value#		
+		]]>
+	</select>
+	
+	<delete id="deleteSysModBySysId" parameterClass="Integer">
+		<![CDATA[
+			delete from ccs.sysmod where sysid=#value#
+		]]>
+	</delete>
+	
+	<delete id="deleteSysMod">
+		delete from ccs.sysmod where sysid = #sysId# and modid = #modId#
+	</delete>
+	
+	<insert id="insertModfuncs" parameterClass="java.util.Map">
+		<selectKey resultClass="int" keyProperty="id" >
+			SELECT seqmodfuncsid.nextval AS id FROM DUAL
+		</selectKey>
+		<![CDATA[
+		 	Insert Into ccs.Modfuncs (Id,modid,funcid,sortno,sysinsttime,sysid) 
+		          Values (#id#,#modId#,#funcId#,#sortNo#,sysdate,#sysId#)
+		]]>
+   </insert>
+	
+	<select id="getSysUsedTreeList" parameterClass="Integer" resultMap="showMap">
+		<![CDATA[
+			 select m.modname text,m.id modid,m.id || ',' || sm.sysid children from ccs.mods m
+	 		inner join ccs.sysmod sm on sm.modid = m.id and m.status > 0
+	 		where sm.sysid = #value#
+		]]>
+	</select>
+	
+	<select id="getChildren" parameterClass="String" resultMap="showMapByFunc">
+		<![CDATA[
+			  select fs.funcname text,fs.id fid from ccs.funcs fs 
+			  inner join ccs.modfuncs mf on mf.funcid = fs.id and fs.status > 0
+			  where mf.modid = ccs.get_str(#value#,',',1) and mf.sysid = ccs.get_str(#value#,',',2)
+		]]>
+	</select>
+	
+	<!-- 根据前台传的条件查询list -->
+	<select id="getSystemSearch" parameterClass="Map" resultClass="logiSystem">
+	
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select * from ccs.logisystem ls
+		]]>
+		<include refid="conditions"/>
+		<![CDATA[
+					order by ls.id desc
+			) t
+		  where rownum<=#EasyUIPage.end#
+		) where r > #EasyUIPage.begin#
+		]]>
+	</select>
+	
+	<!-- 根据前台传的条件查询Count -->
+	<select id="getSystemCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from ccs.logisystem ls
+		<include refid="conditions"/>
+	</select>
+	
+	<!-- 根据systemid查询已分配模块 -->
+	<select id="getAssignModels" resultMap="trees">
+		SELECT SM.ID,SM.MODID TID, M.MODNAME TEXT FROM CCS.SYSMOD SM LEFT JOIN CCS.MODS M ON M.ID = SM.MODID WHERE SM.SYSID = #sysId# AND M.STATUS >0 ORDER BY SORTNO
+	</select>
+	
+	<select id="getModelsCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from ccs.mods m where m.status > 0
+	</select>
+	
+	<!-- 模糊查询模块 -->
+	<select id="getModelsWithChecked" parameterClass="java.util.Map" resultMap="modelsWithChecked">
+		<![CDATA[
+			select * from (
+				select rownum r , t.* from (
+					select m.id,m.modname,
+						case when m.id in (select sm.modid from ccs.sysmod sm where sm.sysid = 200)
+		        		then 1
+	        			else  0
+		        		end as checked
+		        	from ccs.mods m where 1=1 ]]>
+		        	<isNotEmpty prepend="and" property="modName">
+					 <![CDATA[ m.modname like '%$modName$%' ]]>	
+					 </isNotEmpty>
+		        	 <![CDATA[	 and m.status >0) t 
+		        where rownum <= #end#)	
+		       where r > #begin#
+            ]]>
+	</select>
+	
+	<select id="getModelById" parameterClass="java.lang.String" resultClass="model">
+		select * from ccs.mods m where m.id=#id# and m.status > 0
+	</select>
+	
+	<!-- 根据modid查询已分配功能 -->
+	<select id="getFucsByModId" parameterClass="Map" resultMap="trees">
+		select mf.id,mf.funcid tid,f.funcname text from ccs.modfuncs mf left join ccs.funcs f on mf.funcid = f.id where mf.modid=#modId# and mf.sysid=#sysId# and f.status>0 ORDER BY SORTNO
+	</select>
+	
+		<!-- 模糊查询功能 -->
+	<select id="getFuncs" parameterClass="java.util.Map" resultMap="funcs">
+		<![CDATA[
+			select * from (
+				select rownum r , t.* from (
+					select f.id,f.funcname
+		        	from ccs.funcs f where 1=1 ]]>
+		        	<isNotEmpty prepend="and" property="funcName">
+					 <![CDATA[ f.funcname like '%$funcName$%' ]]>	
+					 </isNotEmpty>
+		        	 <![CDATA[	 and f.status >0) t 
+		        where rownum <= #end#)	
+		       where r > #begin#
+            ]]>
+	</select>
+	
+	<select id="getFuncsCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from ccs.funcs f where f.status > 0
+	</select>
+	
+	<delete id="deleteModfuncs" parameterClass="Map">
+  		<![CDATA[
+			delete ccs.modfuncs mf where mf.modid = #modId# and mf.sysid = #sysId#
+  		]]>
+	</delete>
+	
+	
+	
+	<delete id="deleteModFuncsNotInModels" parameterClass="Map">
+  		<![CDATA[
+			delete ccs.modfuncs mf where mf.sysid = #sysId# 
+  		]]>
+  		<isNotEmpty prepend="and" property="modIds">
+  			<![CDATA[ mf.modid not in ]]>	
+  			<iterate open="(" close=")" conjunction="," property="modIds">
+				#modIds[]#
+			</iterate>
+			
+		</isNotEmpty>
+	</delete>
+</sqlMap>

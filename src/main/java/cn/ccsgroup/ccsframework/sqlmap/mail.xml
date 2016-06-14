@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Mail">
+
+	<typeAlias alias="Mail" type="cn.ccsgroup.ccsframework.entity.Mail"/>
+	<!--查询消息列表-->
+	<select id="getMails" resultClass="Mail" parameterClass="map">
+		SELECT * FROM (select a.*,ROWNUM RN  from (
+			SELECT * FROM ccs.mail t WHERE 1=1
+			<dynamic>
+				<isNotEmpty property="loginid" prepend="and">
+					t.receivers = #loginid#
+				</isNotEmpty>
+				<isNotEmpty property="id" prepend="and">
+					t.id = #id#
+				</isNotEmpty>
+				<isNotEmpty property="status" prepend="and">
+					t.status  = #status#
+				</isNotEmpty>
+			</dynamic>
+        ORDER BY SENDTIME DESC) a
+		<dynamic>
+			<isNotEmpty prepend="where" property="end">
+				ROWNUM &lt;= #end#
+			</isNotEmpty>
+		</dynamic>
+		)
+		<dynamic>
+			<isNotEmpty prepend="where" property="begin">
+				RN &gt;= #begin#
+			</isNotEmpty>
+		</dynamic>
+	</select>
+
+	<!--查询消息总数-->
+	<select id="getMailsCount" parameterClass="map" resultClass="int">
+		SELECT count(1) FROM ccs.mail t WHERE 1=1
+		<dynamic>
+			<isNotEmpty property="loginid" prepend="and">
+				t.receivers = #loginid#
+			</isNotEmpty>
+			<isNotEmpty property="id" prepend="and">
+				t.id = #id#
+			</isNotEmpty>
+			<isNotEmpty property="status" prepend="and">
+				t.status  = #status#
+			</isNotEmpty>
+            <isNotEmpty property="isRead" prepend="and">
+                t.ISREAD  = #isRead#
+            </isNotEmpty>
+		</dynamic>
+	</select>
+
+	<!--发送消息-->
+	<insert id="sendMail" parameterClass="Mail">
+		<selectKey keyProperty="id" resultClass="int">
+			SELECT CCS.SEQMAILID.nextval FROM dual
+		</selectKey>
+
+		insert into CCS.MAIL (ID,SENDER,RECEIVERS,TITLE,CONTENT,SENDTIME,SYSINSTTIME,STATUS,USERNAME)
+		values (#id#,#sender#,#receivers#,#title#,#content#,sysdate,sysdate,1,#userName#)
+	</insert>
+	<!--关联邮件和文件-->
+	<insert id="saveMailFiles" parameterClass="map">
+		insert into CCS.MAIL_FILES (MAILID, FILENAME,FILEID) values (#mailId#,#filename#,#fileId#)
+	</insert>
+	<!--更新消息-->
+	<update id="updateMail" parameterClass="map">
+		update CCS.MAIL
+		set ISREAD = #isRead#
+		where ID = #id#
+	</update>
+	<!--查询消息附件-->
+	<select id="getMailFile" parameterClass="int" resultClass="java.util.HashMap">
+		SELECT * FROM CCS.MAIL_FILES WHERE MAILID = #mailid#
+	</select>
+
+	<!--删除消息-->
+	<delete id="deleteMail" parameterClass="int">
+		UPDATE CCS.MAIL SET STATUS = 0 WHERE ID = #id#
+	</delete>
+</sqlMap>

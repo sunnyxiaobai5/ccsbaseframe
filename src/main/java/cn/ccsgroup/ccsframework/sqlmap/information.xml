@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Information">
+
+	<!-- 别名定义 -->
+	<typeAlias alias="Information" type="cn.ccsgroup.ccsframework.entity.Information" />
+	<typeAlias alias="Annex" type="cn.ccsgroup.ccsframework.entity.Annex" />
+	<resultMap id="SysMap" class="java.util.HashMap" >
+		<result property="id" column="ID"/>
+		<result property="sysname" column="SYSNAME"/>
+		<result property="sysinsttime" column="SYSINSTTIME"/>
+		<result property="createruser" column="CREATERUSER"/>
+	</resultMap>
+	<resultMap id="LogicSysMap" class="java.util.HashMap" >
+		<result property="sysname" column="SYSNAME"/>
+		<result property="id" column="ID"/>
+		<result property="alias" column="ALIAS"/>
+		<result property="description" column="DESCRIPTION"/>
+	</resultMap>
+	
+	<!-- 查询条件定义 -->
+	<sql id="conditions"> 
+	  <dynamic prepend="where">
+	 	<isNotEmpty prepend="and">
+	    	im.status > 0
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "id">
+	    	im.ID = #id#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "infotype">
+	    	im.infotype=#infotype#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "infotitle">
+	    	im.infotitle like '%$infotitle$%'
+	    </isNotEmpty>
+	  	 <isNotEmpty prepend="and" property = "sendstatus">
+	    	im.status=#sendstatus#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "startSysinsttime">
+	    	<![CDATA[ to_char(im.Sysinsttime,'yyyy/mm/dd') >= #startSysinsttime# ]]>
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "endSysinsttime">
+	    	<![CDATA[ to_char(im.Sysinsttime,'yyyy/mm/dd')<= #endSysinsttime# ]]>
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "createruser">
+	    	im.createruser=#createruser#
+	    </isNotEmpty>
+	  </dynamic>
+	</sql>
+	
+	<!-- 查询公告 -->
+	<select id="queryInformations" parameterClass="java.util.Map"  resultClass="Information">
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select t.*,case when((select count(*) from ccs.informationmapping where infoid = t.id)>0) then '已发送' else  '未发送' end  as sendstatus,
+					case when ((select max(filesize) from ccs.annex where infoid = t.id and status>0)>0) then '有' else '无' end as filecounts from ccs.information t
+					where t.status > 0
+					order by t.sysinsttime desc
+			) t
+		  where rownum<=#end#
+		) where r > #begin#
+		]]>
+	</select>
+	
+	<!-- 查询公告总条数 -->
+	<select id="queryInformationsCounts" parameterClass="Integer"  resultClass="Integer">
+		select count(*) from ccs.information 
+	</select>
+	
+	<!-- 新增公告 -->
+	<insert id="insertInformation" parameterClass="Information">
+		<selectKey resultClass="int" keyProperty="id"> 
+			select ccs.seqinformationid.NEXTVAL as id from dual
+		</selectKey>
+		insert into ccs.information
+		(id,infotype,infocontent,createruser,sysinsttime,status,infotitle,toolurl)
+		values (#id#,#infotype#,#infocontent#,#createruser#,sysdate,#status#,#infotitle#,#toolurl#)
+	</insert>
+	<!-- 删除公告 -->
+	<update id="deleteInformation" parameterClass="java.util.Map" >
+		update ccs.information  set status = #status#,SYSDELTIME=SYSDATE where id = #id#
+	</update>
+	<!-- 通过公告ID删除附件 -->
+	<update id="deleteAnnex" parameterClass="java.util.Map" >
+		update ccs.annex  set status = #status#,SYSDELTIME=SYSDATE where INFOID = #id#
+	</update>
+	<!-- 通过附件ID删除附件 -->
+	<update id="deleteAnnexById" parameterClass="java.util.Map" >
+		update ccs.annex  set status = #status#,SYSDELTIME=SYSDATE where id = #id#
+	</update>
+	<!-- 新增公告与系统关系 -->
+	<insert id="insertInformationmapping" parameterClass="java.util.Map">
+		<selectKey resultClass="int" keyProperty="id"> 
+			select ccs.seqinformationmappingid.NEXTVAL as id from dual
+		</selectKey>
+		insert into ccs.informationmapping
+		(id,sysid,infoid,sysinsttime,createruser)
+		values (#id#,#sysid#,#infoid#,sysdate,#createruser#)
+	</insert>
+	<!-- 删除公告与系统关系 -->
+	<delete id="deleteInformationmapping" parameterClass="Integer">
+		delete from ccs.informationmapping where infoid=#value#
+	</delete>
+	<!-- 查询公告与系统关系 -->
+	<select id="querySendAppList" parameterClass="Integer"  resultMap="SysMap">
+		<![CDATA[
+			select b.id,b.sysname,to_char(a.sysinsttime,'yyyy/mm/dd hh24:mi:ss') sysinsttime  ,a.createruser from ccs.informationmapping a,ccs.logisystem b
+			where a.sysid=b.id and infoid = #value#
+		]]>
+	</select>
+	<!-- 新增附件 -->
+	<insert id="addAnnex" parameterClass="Annex">
+		<selectKey resultClass="int" keyProperty="id"> 
+			select ccs.seqannexid.NEXTVAL as id from dual
+		</selectKey>
+		insert into ccs.annex
+		(id,infoid,sysinsttime,filecontent,fileformat,filename,filesize,status)
+		values (#id#,#infoid#,sysdate,#filecontent:handler=org.springframework.orm.ibatis.support.BlobByteArrayTypeHandler#,#fileformat#,#filename#,#filesize#,#status#)
+	</insert>
+	<!-- 查询系统 -->
+	<select id="queryAppList" parameterClass="Integer"  resultMap="LogicSysMap">
+		<![CDATA[
+			select id,sysname,alias,description from ccs.logisystem where status > 0
+		]]>
+	</select>
+	<!-- 通过ID查询公告 -->
+	<select id="queryInformationById" parameterClass="Integer"  resultClass="Information">
+		<![CDATA[
+			select * from ccs.information where id = #value#
+		]]>
+	</select>
+	<!-- 通过公告ID查询附件 -->
+	<select id="queryAnnexByInfoid" parameterClass="Integer"  resultClass="Annex">
+		<![CDATA[
+			select id,filename,fileformat,filesize from ccs.annex where infoid = #value# and status>0
+		]]>
+	</select>
+	<!-- 通过附件ID查询附件 -->
+	<select id="queryAnnexById" parameterClass="Integer"  resultClass="Annex">
+		<![CDATA[
+			select * from ccs.annex where id = #value# and status>0
+		]]>
+	</select>
+	<!-- 修改公告 -->
+	<update id="updateInformation" parameterClass="Information">
+		<![CDATA[
+			update ccs.information  set infotype = #infotype#,infocontent = #infocontent#, sysedittime=sysdate,
+			toolurl=#toolurl#,infotitle=#infotitle#
+			where id = #id# 
+		]]>
+	</update>
+	<!-- 查询首页公告 -->
+	<select id="queryNotice" resultClass="Information">
+		<![CDATA[
+			select * from ccs.information i,ccs.informationmapping s
+			where i.id = s.infoid and s.sysid in	]]>
+		  <iterate open="(" close=")" conjunction=",">
+	       	  #[]#
+	      </iterate> 
+	        order by i.sysinsttime desc
+	</select>
+	
+	<!-- 根据前台传的条件查询list -->
+	<select id="getInformationSearch" parameterClass="Map" resultClass="Information">
+	
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select im.*,case when((select count(*) from ccs.informationmapping where infoid = im.id)>0) then '已发送' else  '未发送' end  as sendstatus,
+					case when ((select max(filesize) from ccs.annex where infoid = im.id and status>0)>0) then '有' else '无' end as filecounts from ccs.information im
+		]]>
+		<include refid="conditions"/>
+		<![CDATA[
+					order by im.sysinsttime desc
+			) t
+		  where rownum<=#EasyUIPage.end#
+		) where r > #EasyUIPage.begin#
+		]]>
+	</select>
+	
+	
+	<!-- 根据前台传的条件查询Count -->
+	<select id="getInformationSearchCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from ccs.Information im
+		<include refid="conditions"/>
+	</select>
+	
+</sqlMap>

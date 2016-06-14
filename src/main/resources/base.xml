@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+
+<sqlMap>
+	<typeAlias alias="role" type="cn.ccsgroup.ccsframework.entity.Role" />
+	<typeAlias alias="node" type="cn.ccsgroup.ccsframework.base.entity.TreeNode" />
+	<typeAlias alias="logiSystem" type="cn.ccsgroup.ccsframework.entity.LogiSystem" />
+	<typeAlias alias="dict" type="cn.ccsgroup.ccsframework.base.entity.Dict" />
+	<typeAlias alias="sessionBean" type="cn.ccsgroup.ccsframework.base.entity.SessionBean" />
+	<typeAlias alias="userManager" type="cn.ccsgroup.ccsframework.entity.UserManager"/>
+	<typeAlias alias="userRoles" type="cn.ccsgroup.ccsframework.entity.UserRoles"/>
+	<typeAlias alias="org" type="cn.ccsgroup.ccsframework.entity.Org"/>
+	<typeAlias alias="orgUsers" type="cn.ccsgroup.ccsframework.entity.OrgUsers"/>
+	<typeAlias alias="node" type="cn.ccsgroup.ccsframework.base.entity.TreeNode" />
+	<typeAlias alias="rolesPermissions" type="cn.ccsgroup.ccsframework.entity.RolesPermissions"/>
+	<typeAlias alias="model" type="cn.ccsgroup.ccsframework.entity.Model"/>
+	<typeAlias alias="func" type="cn.ccsgroup.ccsframework.entity.Func"/>
+	<typeAlias alias="ops" type="cn.ccsgroup.ccsframework.entity.Ops"/>
+	<typeAlias alias="position" type="cn.ccsgroup.ccsframework.entity.Position"/>
+	<typeAlias alias="usersPositions" type="cn.ccsgroup.ccsframework.entity.UsersPositions"/>
+	<typeAlias alias="regionCode" type="cn.ccsgroup.ccsframework.entity.RegionCode"/>
+	<typeAlias alias="treeNodeBean" type="cn.ccsgroup.ccsframework.base.entity.TreeNodeBean"/>
+	<typeAlias alias="log" type="cn.ccsgroup.ccsframework.entity.OperationLog" />
+	<typeAlias alias="sms" type="cn.ccsgroup.ccsframework.entity.SMS"/>
+	<typeAlias alias="permission" type="cn.ccsgroup.ccsframework.entity.Permission"/>
+	<typeAlias alias="tree" type="cn.ccsgroup.ccsframework.base.entity.Ztree" />
+</sqlMap>

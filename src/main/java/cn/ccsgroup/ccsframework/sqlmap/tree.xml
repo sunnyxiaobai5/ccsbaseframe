@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+	"http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Tree">
+	<resultMap class="node" id="regionMap">
+		<result property="text" column="text"/>
+		<result property="attributes" column="RID" select="Tree.getRegionAttributes"/>
+		<result property="iconCls" column="iconCls"/>
+	</resultMap>
+	<!-- 区域树 -->
+	<resultMap class="node" id="regionTreeMap">
+		<result property="text" column="text"/>
+		<result property="children" column="CID" select="Tree.getChildRegion"/>
+		<result property="attributes" column="AID" select="Tree.getRegionAttributes"/>
+		<result property="iconCls" column="iconCls"/>
+	</resultMap>
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="regionManageMap">
+		<result property="text" column="text"/>
+		<result property="children" column="CID" select="Tree.regionManageChildren"/>
+		<result property="attributes" column="AID" select="Tree.regionManageAttributes"/>
+		<result property="iconCls" column="iconCls"/>
+	</resultMap>
+	<!-- 组织机构map -->
+	<resultMap class="node" id="orgMap">
+		<result property="text" column="text"/>
+		<result property="children" column="CID" select="Tree.getChildOrg"/>
+		<result property="attributes" column="AID" select="Tree.getOrgAttributes"/>
+		<result property="iconCls" column="iconCls"/>
+	</resultMap>
+	<resultMap class="node" id="orgOwnerMap">
+		<result property="text" column="text"/>
+		<result property="attributes" column="AID" select="Tree.getOrgAttributes"/>
+		<result property="iconCls" column="iconCls"/>
+	</resultMap>
+	
+	<!-- 只获取组织机构 -->
+	<resultMap class="cn.ccsgroup.ccsframework.base.entity.TreeNode" id="baseOrgMap">
+		<result property="text" column="text"/>
+		<result property="attributes" column="AID" select="Tree.getOrgAttributes"/>
+		<result property="iconCls" column="iconCls"/>
+	</resultMap>
+	
+	<!-- 系统菜单 -->
+	<resultMap id="nodeSys" class="node">
+		<result property="children" column="CHILDREN" select="Tree.queryMods"/>
+		<result property="attributes" column="ATTRIBUTE" select="Tree.getSysAttributes" />
+		<result property="text" column="TEXT" />
+	</resultMap>
+	<resultMap id="nodeSys_2" class="node">
+		<result property="children" column="CHILDREN" select="Tree.queryMods"/>
+		<result property="text" column="TEXT" />
+		<result property="attributes" column="ATTRIBUTE" select="Tree.getSysAttributes" />
+	</resultMap>
+	<resultMap id="nodeMods" class="node">
+		<result property="children" column="CHILDREN"  select="Tree.queryFuns"/>
+		<result property="attributes" column="ATTRIBUTE" select="Tree.getModsAttributes" />
+		<result property="text" column="TEXT" />
+	</resultMap>
+	<resultMap id="nodeFuns" class="node">
+		<result property="children" column="CHILDREN" select="Tree.queryOps"/>
+		<result property="attributes" column="ATTRIBUTE" select="Tree.getFunsAttributes" />
+		<result property="text" column="TEXT" />
+	</resultMap>
+	<resultMap id="nodeOps" class="node">
+		<result property="text" column="TEXT" />
+		<result property="attributes" column="ATTRIBUTE" select="Tree.getOpsAttributes" />
+	</resultMap>
+	<resultMap id="SysNodes" class="java.util.HashMap" >
+		<result property="key" column="NODEID"/>
+		<result property="value" javaType="String" column="ID"/>
+	</resultMap>
+	<!-- 系统菜单 -->
+	<!-- 菜单树MAP -->
+	<resultMap id="sysTree" class="node" >
+		<result property="children" column="CID" select="Tree.queryRolePermissionTreeChild"/>
+		<result property="attributes" column="AID" select="Tree.queryRolePermissionTreeAtt" />
+		<result property="text" column="TEXT" />
+	</resultMap>
+	
+	<!-- COMBOTREE取区域信息开始 -->
+	<resultMap class="node" id="regionComboMap">
+		<result property="id" column="id"/>
+		<result property="text" column="text"/>
+		<result property="children" column="CID" select="Tree.findRegionComboChildren"/>
+	</resultMap>
+	
+	<resultMap class="node" id="baseRegionComboMap">
+		<result property="id" column="id"/>
+		<result property="text" column="text"/>
+	</resultMap>
+	
+	<!-- 无参数区域combo开始 -->
+	<resultMap class="node" id="npRegionCombo">
+		<result property="id" column="id"/>
+		<result property="text" column="text"/>
+		<result property="children" column="CID" select="Tree.findAllChildrenRegion"/>
+	</resultMap>
+	
+	<select id="findAllRegionCodeCombo" resultMap="npRegionCombo">
+		<![CDATA[
+			select c.regioncode id,c.regionname text,c.regioncode cid from ccs.regioncode c where not exists (
+			select 1 from ccs.regioncode f where f.regioncode=c.regionpid)
+		]]>
+	</select>
+	<select id="findAllChildrenRegion" parameterClass="Integer" resultMap="npRegionCombo">
+		<![CDATA[
+			select c.regioncode id,c.regionname text,c.regioncode cid from ccs.regioncode c where c.regionpid = #value#
+		]]>
+	</select>
+	<!-- 无参数区域combo结束 -->
+	
+	<resultMap id="regionUtil" class="tree">
+		<result property="id" column="ID"/>
+		<result property="tid" column="TID"/>
+		<result property="parentId" column="PID"/>
+		<result property="text" column="TEXT" />
+		<result property="open" column="OPEN" />
+	</resultMap>
+	
+	<select id="findAllRegions" resultMap="regionUtil">
+			select id id, r.regioncode tid, r.regionname text, r.regionpid pid, 'true' open
+			  from ccs.regioncode r
+			 start with r.regioncode =
+			            (select r1.regioncode
+			               from ccs.regioncode r1
+			              where not exists (select 1
+			                       from ccs.regioncode r2
+			                      where r2.regioncode = r1.regionpid))
+			connect by prior r.regioncode = r.regionpid 
+	</select>
+	
+	<select id="findStreet" parameterClass="String" resultMap="regionUtil">
+		select id id, s.streetcode tid, s.streetname text, s.regioncode pid, 'true' open from ccs.street s where s.regioncode = #regioncode#
+	</select>
+	
+	<select id="findCommunity" parameterClass="String" resultMap="regionUtil">
+		select id id, c.communitycode tid, c.communityname text, c.streetcode pid, 'true' open from ccs.community c where c.streetcode = #streetcode#
+	</select>
+	
+	<resultMap id="streetAndCommunity" class="tree">
+		<result property="tid" column="TID"/>
+		<result property="text" column="TEXT" />
+	</resultMap>
+	
+	<!-- 根据区域查询所有的街道 -->
+	<select id="findAllStreetByRcode" parameterClass="String" resultMap="streetAndCommunity">
+		select s.streetcode tid, s.streetname text from ccs.street s where s.regioncode = #regionCode#
+	</select>
+	
+	<!-- 根据街道查询所有的社区 -->
+	<select id="finAllCommunityByScode" parameterClass="String" resultMap="streetAndCommunity">
+		select c.communitycode tid, c.communityname text from ccs.community c where c.streetcode = #streetCode#
+	</select>
+	
+	<!-- 传入USERID -->
+	<select id="findBaseComboRegionByUser" resultMap="baseRegionComboMap" parameterClass="Integer">
+		<![CDATA[
+			 select rc.regioncode id,rc.regionname text from ccs.regioncode rc
+		         inner join ccs.rolesregion rr on rr.regioncode = rc.regioncode
+		         inner join ccs.usersroles ur on ur.roleid = rr.roleid where ur.userid = #value#
+		]]>
+	</select>
+	
+	<select id="findChildComboRegionByPid" resultMap="baseRegionComboMap" parameterClass="Integer">
+		<![CDATA[
+			 select rc.regioncode id,rc.regionname text from ccs.regioncode rc where rc.regionpid = #value#
+		]]>
+	</select>
+	
+	<!-- 获取全部下拉区域 -->
+	<select id="findRegionComboChildren" resultMap="regionComboMap" parameterClass="Integer">
+		<![CDATA[
+			select rc.regioncode id,rc.regionname text,rc.regioncode cid from ccs.regioncode rc where rc.regionpid = #value#
+		]]>
+	</select>	
+	
+	<select id="findAllComboRegionByUser" resultMap="regionComboMap" parameterClass="Integer">
+		<![CDATA[
+			 select rc.regioncode id,rc.regionname text,rc.regioncode cid
+			  from ccs.regioncode rc
+		         inner join ccs.rolesregion rr on rr.regioncode = rc.regioncode
+		         inner join ccs.usersroles ur on ur.roleid = rr.roleid where ur.userid = #value#
+		]]>
+	</select>
+	
+	<!-- COMBOTREE取区域信息结束 -->
+	
+	
+	<!-- 用户ID查询区域 -->
+	<select id="selectRegionListByUserId" parameterClass="Integer" resultMap="regionMap">
+		<![CDATA[
+			select rc.regionname text,'icon-region' iconCls,rc.regioncode rid from ccs.rolesregion rs
+			inner join ccs.usersroles ur on ur.roleid = rs.roleid
+			inner join ccs.regioncode rc on rc.regioncode = rs.regioncode
+			where ur.userid = #value#
+		]]>
+	</select>
+	<select id="selectRegionListByRid" parameterClass="Map" resultMap="regionMap">
+		<![CDATA[ select id rid,regionname text,'icon-region' iconCls from ccs.regioncode where regionpid = #RID# ]]>
+	</select>
+
+	<!-- 获取区域attributes -->
+	<select id="getRegionAttributes" parameterClass="String" resultClass="java.util.HashMap">
+		<![CDATA[ select id,regioncode,regionname,regionabb,regionpid from ccs.regioncode where status > 0 and regioncode = #value# ]]>
+	</select>
+
+
+	<!-- 获取组织机构树列表 当前级  begin -->
+	<select id="selectRegionAndOrgTree" parameterClass="String" resultMap="orgMap">
+		<![CDATA[ select o.orgname text,o.id aid,o.id cid,'icon-department' iconCls from ccs.organization o where o.status > 0 and o.regioncode = #value#	]]>
+	</select>
+	<select id="getChildOrg" parameterClass="Integer" resultMap="orgMap">
+		<![CDATA[ select o.orgname text,o.id aid,o.id cid,'icon-department' iconCls from ccs.organization o where o.status > 0 and o.parentid = #value#	]]>
+	</select>
+	<select id="getOrgAttributes" parameterClass="Integer" resultClass="java.util.HashMap">
+		<![CDATA[ select o.orgname,o.orgcode , o.id ,o.shortname,o.regioncode from ccs.organization o where o.status > 0 and o.id = #value# ]]>
+	</select>
+	<!-- 获取组织机构树列表 当前级  end -->
+	
+	<!-- 根据用户ID取区域树 begin -->
+	<select id="selectRegionTreeByUserId" parameterClass="Integer" resultMap="regionTreeMap">
+		select  t.regionname text, t.regioncode aid , to_number(t.regioncode) cid ,'icon-region' iconCls,t.retrievalA,t.retrievalB from ccs.REGIONCODE t where exists (
+		select 1 from ORGANIZATION t2 , orgusers t1 where t2.id = t1.orgid and t1.userid = #value# and t1.status = 1 and t2.status = 1 and t.regioncode = t2.regioncode )
+	</select>
+	<!-- *********************************************************区域管理 获取树************************************************************************************ -->
+	<select id="regionManageTreeByRegionPid" parameterClass="String" resultMap="regionManageMap">
+		select  t.regionname text, t.regioncode aid , to_number(t.regioncode) cid , 'icon-region' iconCls,t.id ,t.regioncode,t.regionCode, t.regionpid, t.regionabb, t.retrievalA,t.retrievalB,t.sysedittime, t.sysdeltime, t.status from ccs.REGIONCODE t where t.regionPid = #REGIONPID# and t.status>0
+	</select>
+	<!-- 区域管理模块    根据用户ID取区域树 begin -->
+	<select id="regionManageTreeByRegionCode" parameterClass="String" resultMap="regionManageMap">
+		select  t.regionname text, t.regioncode aid , to_number(t.regioncode) cid , 'icon-region' iconCls,t.id ,t.regioncode,t.regionCode, t.regionpid, t.regionabb, t.retrievalA,t.retrievalB,t.sysedittime, t.sysdeltime, t.status from ccs.REGIONCODE t where t.regionCode = #REGIONCODE# and t.status>0
+	</select>
+	<!--区域管理模块   标准组织机构获取结束 -->
+	<select id="regionManageChildren" parameterClass="String" resultMap="regionManageMap">
+		select  t.regionname text, t.regioncode aid , to_number(t.regioncode)  cid ,'icon-region' iconCls,t.id ,t.id , t.regioncode,t.regionCode, t.regionpid, t.regionabb, t.retrievalA,t.retrievalB,t.sysedittime, t.sysdeltime, t.status from ccs.REGIONCODE t where t.regionpid= #REGIONPID# and t.status>0
+	</select>
+	<!-- 区域管理模块 获取区域attributes -->
+	<select id="regionManageAttributes" parameterClass="String" resultClass="java.util.HashMap">
+		<![CDATA[ select t.id , t.regioncode,t.regionname, t.regionpid, t.regionabb, t.sysedittime, t.sysdeltime, t.status, t.retrievalA,t.retrievalB,p.regionName parentRegionName
+			from ccs.regionCode t left join ccs.regionCode p  on t.regionPid=p.regionCode where t.status > 0 and (p.status>0 or p.status is null)  and t.regioncode = #value# ]]>
+	</select>
+	<select id="regionManageChildByRegionPid" resultMap="regionManageMap" parameterClass="String">
+		<![CDATA[
+		 	select  t.regionname text, t.regioncode aid , to_number(t.regioncode)  cid ,'icon-region' iconCls,t.id ,t.id , t.regionpid, t.regionabb, t.retrievalA,t.retrievalB,t.sysedittime, t.sysdeltime, t.status from ccs.REGIONCODE t where t.regionpid= #REGIONPID# and t.status>0
+		]]>
+	</select>
+	<!-- **********************************************************区域管理  获取树*********************************************************************************** -->
+	<!-- 标准组织机构树获取开始 -->
+	<select id="findCurrentOrg" resultMap="baseOrgMap" parameterClass="Integer">
+		<![CDATA[
+			   select o.orgname text,o.id aid,'icon-department' iconCls from ccs.organization o 
+		       inner join ccs.orgusers ou on ou.orgid = o.id 
+		       where ou.userid  = #value#
+		]]>
+	</select>
+	
+	<select id="findChildOrgByPid" resultMap="baseOrgMap" parameterClass="Integer">
+		<![CDATA[
+		 	select o.orgname text,o.id aid,'icon-department' iconCls from ccs.organization o where o.parentid = #value#
+		]]>
+	</select>
+	<!-- 标准组织机构获取结束 -->
+	<select id="getChildRegion" parameterClass="Integer" resultMap="regionTreeMap">
+		select  t.regionname text, t.regioncode aid , to_number(t.regioncode)  cid ,'icon-region' iconCls from ccs.REGIONCODE t where t.regionpid= #value# 
+	</select>
+	<!-- 根据用户ID取区域树 end-->
+	
+	<!--　根据orgCode取其regionCode -->
+	<select id="queryOrgRegion"  resultClass="String">
+		<![CDATA[ select t.regioncode code from ccs.regioncode t where t.regioncode in (SELECT distinct o.orgcode FROM organization o where o.status > 0
+			START WITH  o.id in  ]]>
+		  <iterate   open="(" close=")" conjunction=",">
+        	$[]$
+        </iterate> 
+       <![CDATA[ CONNECT BY PRIOR o.id =  o.parentid ) and t.status > 0
+       union 
+       SELECT distinct o1.regioncode code FROM organization o1 where o1.id in ]]>
+       <iterate   open="(" close=")" conjunction=",">
+        	$[]$
+        </iterate> 
+        <![CDATA[ and o1.status > 0]]>
+	</select>
+	
+	<!-- 超级管理员权限树开始 -->
+	<select id="queryAdminLogiSystem" parameterClass="java.lang.String" resultMap="nodeSys">
+		<![CDATA[	select t.id ATTRIBUTE , t.sysname text , t.id children from LOGISYSTEM  t where  t.status > 0 order by t.sortno  ]]>
+	</select>
+	<!-- 超级管理员权限树结束 -->
+	<!-- 根据角色权限树开始  弃用
+	<select id="queryLogiSystem"   resultMap="nodeSys">
+		<![CDATA[	select t.id ATTRIBUTE , t.sysname text , t.id children from LOGISYSTEM  t  where t.id in
+		 (select t1.nodeid from permissions t1 ,rolespermissions t2 where t2.roleid in]]>
+		 <iterate   open="(" close=")" conjunction=",">
+        	 $[]$
+        </iterate> 
+		<![CDATA[ and t1.id = t2.permissionid and t1.nodelevel = 0 and t2.status > 0) and   t.status > 0 order by t.sortno  ]]>
+	</select>-->
+	
+	<select id="queryMods" parameterClass="Integer" resultMap="nodeMods">
+		<![CDATA[	select  #value#||'-'||t.id ATTRIBUTE , t.modname text ,t.id||'-'|| #value# children  from SYSMOD m ,MODS t 
+ 				 where t.id = m.modid and m.sysid = #value#	and t.status > 0 order by m.sortno ]]>
+	</select>
+	<select id="queryFuns" parameterClass="String" resultMap="nodeFuns">
+		<![CDATA[	 select  #value#||'-'||t.id ATTRIBUTE , t.funcname text ,t.id||'-'|| #value# children  from modfuncs m ,funcs t 
+ 				 where t.id = m.funcid and m.modid = to_number(get_str(#value#,'-',1)) and m.sysid = to_number(get_str(#value#,'-',2)) and t.status > 0  order by m.sortno ]]>
+	</select>
+	<select id="queryOps" parameterClass="String" resultMap="nodeOps">
+		<![CDATA[	  select  #value#||'-'||t.id ATTRIBUTE , t.opsname text  from funcsops m ,ops t 
+		  where t.id = m.opsid and m.funcid = to_number(get_str(#value#,'-',1))  and t.status > 0  order by m.sortno ]]>
+	</select>
+	
+	<select id="getSysAttributes" parameterClass="Integer" resultClass="java.util.HashMap">
+	<![CDATA[ select id, id nodeid ,sysname nodename , 0 nodelevel , 0 nodepid , 0 key from  LOGISYSTEM where id = #value# ]]>
+	</select>
+	<select id="getModsAttributes" parameterClass="String" resultClass="java.util.HashMap">
+	<![CDATA[  select id , id nodeid ,modname nodename , 1 nodelevel , to_number(get_str(#value#,'-',1)) nodepid  , get_str(#value#,'-',1)||'-'||id key from  MODS where id = to_number(get_str(#value#,'-',2)) ]]>
+	</select>
+	<select id="getFunsAttributes" parameterClass="String" resultClass="java.util.HashMap" >
+	<![CDATA[   select id , id nodeid,funcname nodename , 2 nodelevel , to_number(get_str(#value#,'-',1)) nodepid , get_str(#value#,'-',2)||'-'||get_str(#value#,'-',1)||'-'||id key from  funcs where id = to_number(get_str(#value#,'-',3))  ]]>
+	</select>
+	<select id="getOpsAttributes" parameterClass="String" resultClass="java.util.HashMap">
+	<![CDATA[   select id , id nodeid ,opsname nodename , 3 nodelevel , to_number(get_str(#value#,'-',1)) nodepid ,  get_str(#value#,'-',3)||'-'||get_str(#value#,'-',2)||'-'||get_str(#value#,'-',1)||'-'||id key from  ops where id = to_number(get_str(#value#,'-',4)) ]]>
+	</select>
+	<!-- 权限树结束 -->
+	
+	<select id="queryOrgTreeByRoleId" parameterClass="Integer" resultClass="String">
+		<![CDATA[  select t.orgid  from ccs.rolesregion t where t.roleid = #value# ]]>
+	</select>
+	
+	<select id="queryRolePermission" parameterClass="Integer" resultMap="SysNodes">
+		<![CDATA[select p.id id,   
+		 p.nodepids||'-'||p.nodeid nodeid
+		  from PERMISSIONS p where exists (select 1 from rolespermissions r where r.roleid = #value#  and r.PERMISSIONID = p.id and r.status > 0) ]]>
+	</select>
+	
+	<select id="findOrgTreeByUserIdOwner" parameterClass="Map" resultMap="orgOwnerMap">
+	<![CDATA[select t.orgid cid, t.orgid aid, t.orgname text , 'icon-department'  iconCls
+  				from ROLESREGION t where exists (select 1  from ccs.usersroles u
+         where u.userid = #userId#   and u.roleid = t.roleid  and u.status > 0) and t.orgpid = #orgId#  and t.status > 0]]>
+	</select>
+	
+	<select id="getChildOrgOwner" parameterClass="Integer" resultMap="orgMap">
+		<![CDATA[ select o.orgname text,o.orgid aid,o.orgid cid,'icon-department' iconCls from ccs.ROLESREGION o where o.status > 0 and o.orgpid = #value#	]]>
+	</select>
+	<!-- 根据角色取菜单树 begin 弃用
+	<select id="queryRolePermissionTree" resultMap="sysTree">
+	<![CDATA[select distinct t1.nodeid , t1.nodename text, t1.id||':'||]]><iterate  conjunction=",">$[]$</iterate> 
+		 <![CDATA[cid, t1.id aid from ccs.permissions t1, ccs.rolespermissions t2
+		 where t1.id = t2.permissionid  and t2.roleid in ]]>
+ 		<iterate   open="(" close=")" conjunction=",">
+        	$[]$
+        </iterate> 
+		<![CDATA[  and t1.status > 0 and t1.nodelevel = 0]]>
+	</select>
+	<select id="queryRolePermissionTreeChild" parameterClass="String" resultMap="sysTree">
+		<![CDATA[ select distinct t1.nodeid , t1.nodename text, t1.id||':'||get_str(#value#,':',2) cid, t1.id aid from ccs.permissions t1, ccs.rolespermissions t2
+					 where t1.id = t2.permissionid and t1.parentid= to_number(get_str(#value#,':',1))
+					   and t2.roleid in ( get_str(#value#,':',2)) and t1.status > 0]]>
+	</select>
+	<select id="queryRolePermissionTreeAtt" parameterClass="Integer" resultClass="java.util.HashMap">
+		 <![CDATA[select *  from permissions where id = #value# and status > 0]]>
+	</select>-->
+	<!-- 根据角色取菜单树 end-->
+	<!-- 根据角色取菜单树 begin-->
+	<select id="queryRolePermissionTree" resultMap="sysTree">
+	<!-- <![CDATA[select distinct t1.nodeid ,  (select l.sysname from ccs.logisystem l where l.id = t1.nodeid  )
+            text, t1.id||':'||]]><iterate  conjunction="||','||">$[]$</iterate> 
+		 <![CDATA[cid, t1.id aid from ccs.permissions t1, ccs.rolespermissions t2
+		 where t1.id = t2.permissionid  and t2.roleid in ]]>
+ 		<iterate   open="(" close=")" conjunction=",">
+        	$[]$
+        </iterate> 
+		<![CDATA[  and t1.status > 0 and t1.nodelevel = 0]]> -->
+		<iterate   open="(" close=")" conjunction="union">
+        	<![CDATA[ select  t1.nodeid ,  (select l.sysname from ccs.logisystem l where l.id = t1.nodeid  )
+            text, t1.id||':'||$[]$ cid, t1.id aid from ccs.permissions t1, ccs.rolespermissions t2
+		 where t1.id = t2.permissionid  and t2.roleid = $[]$ and t1.status > 0 and t1.nodelevel = 0]]> 
+        </iterate> 
+	</select>
+	<select id="queryRolePermissionTreeChild" parameterClass="String" resultMap="sysTree">
+		<![CDATA[ select  t1.nodeid , case t1.nodelevel 
+		        	 when 1 then (select l1.modname from ccs.mods l1 where l1.id = t1.nodeid )
+		          	 when 2 then( select l2.funcname from ccs.funcs l2 where l2.id = t1.nodeid)
+		             when 3 then( select l3.opsname from ccs.ops l3 where l3.id = t1.nodeid)
+		             when 0 then (select  l.sysname from ccs.logisystem l where l.id = t1.nodeid )
+             		 else null   end  text, t1.id||':'||get_str(#value#,':',2) cid, 
+             		 t1.id aid  from ccs.permissions t1, ccs.rolespermissions t2
+					 where t1.id = t2.permissionid and t1.parentid= to_number(get_str(#value#,':',1))
+					   and t2.roleid in ( get_str(#value#,':',2)) and t1.status > 0 order by t1.id  ]]>
+	</select>
+	<select id="queryRolePermissionTreeAtt" parameterClass="Integer" resultClass="java.util.HashMap">
+		 <![CDATA[select nodeid  id ,  nodeid ,   nodelevel ,  nodepid , nodepids key , id pid from permissions where id =  #value#  and status > 0]]>
+	</select>
+	<!-- 根据角色取菜单树 end-->
+	<!-- 组织机构下拉开始 -->
+	<resultMap class="node" id="allOrgCombo">
+		<result property="id" column="id"/>
+		<result property="text" column="text"/>
+		<result property="iconCls" column="iconCls"/>
+		<result property="children" column="CID" select="Tree.getAllOrgChildCombo"/>
+	</resultMap>
+	
+	<select id="findAllOrgExistsOwnerCombo" parameterClass="java.util.Map" resultMap="allOrgCombo">
+		<![CDATA[
+			select o.orgname text,o.id || ',' || #orgId# cid ,'icon-department' iconCls,o.id  from ccs.organization o 
+		       inner join ccs.orgusers ou on ou.orgid = o.id 
+		       where ou.userid  = #userId# and o.id <> #orgId#
+		]]>
+	</select>
+	
+	<select id="getAllOrgChildCombo" parameterClass="String" resultMap="allOrgCombo">
+		<![CDATA[
+			 select o.orgname text,o.id || ',' || ccs.get_str(#value#,',',2) cid ,'icon-department' iconCls,o.id 
+            	from ccs.organization o where o.parentid = ccs.get_str(#value#,',',1) and o.id <>  ccs.get_str(#value#,',',2)
+		]]>
+	</select>
+	<!-- 组织机构下拉结束 -->
+	
+	<!-- 组织职位下拉开始 -->
+	<resultMap class="node" id="OrgAndPostTree">
+		<result property="children" column="CID" select="Tree.findAllOrgAndPost"/>
+		<result property="attributes" column="AID" select="Tree.getPostAndOrgAttributes" />
+		<result property="text" column="TEXT" />
+		<result property="iconCls" column="iconCls"/>
+	</resultMap>
+	<select id="findAllOrgAndPost" parameterClass="Integer" resultMap="OrgAndPostTree">
+		<dynamic>
+			<isNotNull property="value">
+				<![CDATA[
+					select o.orgname text,o.id || ',' || 1 aid,o.id cid,'icon-department' iconCls 
+					from ccs.organization o where o.status > 0 and o.parentid = #value#	
+					union all
+					select p.pname text,p.id || ',' || -1 aid,null cid,'icon-work' iconCls
+					from ccs.position p where p.orgid = #value# and p.status > 0
+				]]>
+			</isNotNull>
+		</dynamic>
+	</select>
+	
+	<select id="getPostAndOrgAttributes" parameterClass="String" resultClass="java.util.HashMap">
+		<![CDATA[
+				select o.id,o.orgname text,o.orgcode code,o.parentid pid,ccs.get_str(#value#,',',2) dtype from ccs.organization o 
+				where o.id in(select case when ccs.get_str(#value#,',',2) > 0 then to_number(ccs.get_str(#value#,',',1)) else -1 end from dual)
+				union all
+				select p.id,p.pname text,p.pno code,p.orgid pid,ccs.get_str(#value#,',',2) dtype from ccs.position p 
+				where p.id in (select case when ccs.get_str(#value#,',',2) > 0 then  - 1 else to_number(ccs.get_str(#value#,',',1)) end from dual)
+		]]>
+	</select>
+	
+	<!-- lp3组织机构树  zTree -->
+	<resultMap class="Org" id="orgzTreeMap">
+		<result property="id" column="ID"/>
+		<result property="parentId" column="PARENTID"/>
+		<result property="orgName" column="ORGNAME"/>
+		<result property="open" column="open"/>
+        <result property="icon" column="ICON" />
+        <result property="chkDisabled" column="CHKDISABLED"/>
+	</resultMap>
+	<select id="getOrgzTree" resultMap="orgzTreeMap">
+		SELECT o.* ,
+		   case when o.id = #orgid#
+		    then 'true' 
+		     else  'false'
+		      end as open,
+           CASE WHEN o.Isvirtual = 0
+            then '../images/icon-realdepartment.png'
+              else '../images/icon-virtualdepartment.png'
+              end as icon,
+           CASE WHEN o.Isvirtual = 0
+            then 'false'
+              else 'true'
+              end as chkDisabled
+		 FROM ORGANIZATION o
+		         start WITH o.id = #orgid#
+		             connect BY prior o.id = o.PARENTID order by  o.sort
+	</select>
+    <select id="getSearchableOrgzTree" resultMap="orgzTreeMap">
+        SELECT o.* ,
+        case when o.id = #orgid#
+        then 'true'
+        else  'false'
+        end as open,
+        CASE WHEN o.Isvirtual = 0
+        then '../images/icon-realdepartment.png'
+        else '../images/icon-virtualdepartment.png'
+        end as icon,'false' as chkDisabled
+        FROM ORGANIZATION o
+        start WITH o.id = #orgid#
+        connect BY prior o.id = o.PARENTID order by  o.sort
+    </select>
+	<resultMap id="allSys" class="tree">
+		<result property="id" column="ID"/>
+		<result property="tid" column="TID"/>
+		<result property="parentId" column="PARENTID"/>
+		<result property="text" column="TEXT" />
+		<result property="open" column="OPEN" />
+		<result property="nodelevel" column="NODELEVEL" />
+	</resultMap>
+
+	<!-- lp3  权限树  1        系统-->
+	<select id="querySys" resultMap="allSys">
+		select s.id , 'S_'|| s.id  as tid ,  '0' parentid , s.sysname text,'false' open, '0' nodelevel  from ccs.logisystem s where s.status > 0
+	</select>
+	<!-- lp3  权限树  2        模块-->
+	<select id="queryMod" resultMap="allSys">
+		select m.id , 'S_'|| sm.sysid ||'M_'|| m.id as tid ,  'S_'||s.id parentid , m.modname  text,'false' open,'1' nodelevel 
+	    from ccs.sysmod sm left join ccs.mods m on sm.modid = m.id left join ccs.logisystem s on sm.sysid = s.id 
+	    where m.status >0 and s.status >0 and s.id = #sysid# order by sm.sortno
+	</select>
+	<!-- lp3  权限树  3        功能-->
+	<select id="queryFunc" resultMap="allSys">
+		select f.id , 'S_'|| mf.sysid ||'M_'|| mf.modid||'F_'|| f.id as tid ,  'S_'|| mf.sysid ||'M_'|| mf.modid parentid , f.funcname text,'false' open ,'2' nodelevel 
+    		from ccs.modfuncs mf  left join ccs.funcs f on  f.id = mf.funcid left join ccs.logisystem s on s.id = mf.sysid where f.status > 0 and s.status >0 
+      		and s.id = #sysid# and mf.modid = #modid# order by mf.sortno 
+	</select>
+	<!-- lp3  权限树  4        操作-->
+	<select id="query_Ops" resultMap="allSys">
+		select o.id , 'O_'||o.id as tid , 'S_'|| mf.sysid ||'M_'|| mf.modid||'F_'||fo.funcid parentid , o.opsname text,'false' open ,'3' nodelevel 
+		from ccs.funcsops fo left join ccs.ops o on fo.opsid = o.id 
+			left join ccs.modfuncs mf on fo.funcid = mf.funcid 
+			left join ccs.logisystem s on s.id = mf.sysid where o.status > 0  and s.status > 0 
+				and s.id = #sysid# and mf.modid = #modid# and mf.funcid = #funcid#
+	</select>
+
+	<select id="querySysById" resultMap="allSys">
+		select s.id , 'S_'|| s.id  as tid ,  '0' parentid , s.sysname text,'true' open, '0' nodelevel from ccs.logisystem s where s.id = #sysid# and s.status > 0
+	</select>
+	
+	
+
+	<!-- lp3  角色的权限 -->
+	<select id="queryPermissionByRoleId" resultClass="permission">
+		select * from permissions p where p.id in
+			(select rp.permissionid from rolespermissions rp where rp.roleid = #roleid#) order by id 
+	</select>
+	
+	<select id="queryTheUserPermission" resultClass="Integer">
+		select distinct p.nodeid from ccs.permissions p where p.id in
+			(select rp.permissionid from ccs.rolespermissions rp where rp.roleid in
+				(select r.id from ccs.roles r where r.id in 
+				<iterate property="roleids" open="(" close=")" conjunction=",">
+					$roleids[]$
+				</iterate>
+				)) and p.nodelevel = #nodelevel#
+				<isNotEmpty property="pid">
+		    		and p.pid like '%$pid$%'
+				</isNotEmpty>
+	</select>
+	
+	<resultMap class="tree" id="ztreeOrgMap">
+		<result property="id" column="ID"/>
+		<result property="text" column="TEXT"/>
+		<result property="parentId" column="PARENTID"/>
+		<result property="flag" column="FLAG"/>
+	</resultMap>
+	
+	<select id="queryOrg" parameterClass="Integer" resultMap="ztreeOrgMap">
+		SELECT o.id id, o.orgname text, o.parentid parentid,'O' flag from ccs.organization o START WITH o.id = #orgid# CONNECT BY PRIOR o.id = o.parentid
+	</select>
+	
+	<resultMap class="position" id="ztreePostMap">
+		<result property="id" column="ID"/>
+		<result property="pname" column="pname"/>
+		<result property="orgid" column="ORGID"/>
+	</resultMap>
+	
+	<select id="queryPosition" resultMap="ztreePostMap">
+		select p.id,p.pname,p.orgid from position p where p.status > 0 
+	</select>
+
+    <select id="getTopOrgId" resultClass="java.lang.Integer">
+        select o.Id from ccs.organization o WHERE o.parentid IS NULL OR o.parentid = 0
+    </select>
+
+    <select id="getParentOrgId" resultClass="java.lang.Integer">
+        SELECT o.parentid FROM ccs.ORGANIZATION o WHERE o.ID = #value#
+    </select>
+
+
+</sqlMap>
+
+
+

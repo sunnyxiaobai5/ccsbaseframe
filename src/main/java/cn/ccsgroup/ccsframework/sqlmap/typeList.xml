@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="TypeList">
+
+	<!-- 别名定义 -->
+	<typeAlias alias="TypeList" type="cn.ccsgroup.ccsframework.entity.TypeList" />
+	
+	<!-- 查询条件定义 -->
+	<sql id="conditions"> 
+	  <dynamic prepend="where">
+	    <isNotEmpty prepend="and" property = "id">
+	    	tl.ID = #id#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "kind">
+	    	tl.kind=#kind#
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "typename">
+	    	tl.typename like '%$typename$%'
+	    </isNotEmpty>
+	  	 <isNotEmpty prepend="and" property = "type">
+	    	tl.type like '%$type$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "fullname">
+	    	tl.fullname like '%$fullname$%'
+	    </isNotEmpty>
+	    <isNotEmpty prepend="and" property = "ident">
+	    	tl.ident=#ident#
+	    </isNotEmpty>
+	  </dynamic>
+	</sql>
+	
+	<!-- 查询通用标准 -->
+	<select id="queryTypeList" parameterClass="java.util.Map"  resultClass="TypeList">
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select * from ccs.typelist t order by t.id desc
+			) t
+		  where rownum<=#end#
+		) where r > #begin#
+		]]>
+	</select>
+	<!-- 查询通用标准总条数 -->
+	<select id="queryTypeListCounts" parameterClass="Integer"  resultClass="Integer">
+		select count(*) from ccs.typelist 
+	</select>
+	<!-- 新增通用标准 -->
+	<insert id="InsertTypeList" parameterClass="Map">
+		 <![CDATA[ INSERT INTO ccs.TypeList (id,REGIONCODE,KIND,TYPENAME,TYPE,FULLNAME,TYPECODE,PORDER,IDENT,sysinsttime)
+	    	 values (ccs.seqtypelistid.NEXTVAL,#typeList.regioncode#,#typeList.kind#,#typeList.typename#,#typeList.type#,#typeList.fullname#,#typeList.typecode#,#typeList.porder#,#typeList.ident#,SYSDATE)]]>
+		  <selectKey resultClass="int" keyProperty="id" >
+		      SELECT ccs.seqtypelistid.CURRVAL FROM DUAL
+		  </selectKey> 
+	</insert>
+	<select id="queryTypeListById" parameterClass="Integer" resultClass="TypeList">
+		<![CDATA[	select  * from ccs.TypeList t  where t.id = #value# ]]>
+	</select>
+	<!-- 修改通用标准 -->
+	<update id="updateTypeList" parameterClass="TypeList">
+		 <![CDATA[ update ccs.TypeList ]]>	
+		<dynamic prepend="set">
+			<isNotEmpty prepend="," property="kind">
+			<![CDATA[	 kind=#kind#]]>	
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="typename">
+			<![CDATA[	 typename=#typename#]]>	
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="type">
+			<![CDATA[	 type=#type#]]>	
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="fullname">
+			<![CDATA[	 fullname=#fullname#]]>	
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="porder">
+			<![CDATA[	 porder=$porder$]]>	
+			</isNotEmpty>
+			<isNotEmpty prepend="," property="ident">
+			<![CDATA[	 ident=#ident#]]>	
+			</isNotEmpty>
+			<isNotEmpty prepend=",">
+			<![CDATA[	 SYSEDITTIME=SYSDATE]]>	
+			</isNotEmpty>
+		</dynamic>
+		 <![CDATA[ where id = #id#]]>	
+	</update>
+	<delete id="deleteTypelist" parameterClass="String">
+		<![CDATA[ delete ccs.TypeList where id in ($id$)  ]]>	
+	</delete>
+	<!-- 通过类型获取通用标准列表 -->
+	<select id="getTypyListByKind" parameterClass="Map" resultClass="TypeList">
+		<![CDATA[ select * from ccs.TypeList where kind =#kind# order by porder]]>	
+	</select>
+	
+	<!-- 根据前台传的条件查询list -->
+	<select id="getTypyListSearch" parameterClass="Map" resultClass="TypeList">
+	
+		<![CDATA[select * from (
+			select rownum r,t.* from(
+					select * from ccs.typelist tl 
+					
+		]]>
+		<include refid="conditions"/>
+		<![CDATA[
+					order by tl.id desc
+			) t
+		  where rownum<=#EasyUIPage.end#
+		) where r > #EasyUIPage.begin#
+		]]>
+	</select>
+	
+	
+	<!-- 根据前台传的条件查询Count -->
+	<select id="getTypyListSearchCount" parameterClass="Map" resultClass="Integer">
+		select count(*) from ccs.TypeList tl
+		<include refid="conditions"/>
+	</select>
+</sqlMap>
